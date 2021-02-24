@@ -20,7 +20,8 @@ module.exports = {
               { text: 'vue', link: '/front-end/vue/' },
               { text: 'webpack', link: '/front-end/tools/webpack' },
               { text: '工具', link: '/front-end/tools/tools' },
-              { text: '算法', link: '/front-end/algorithm/' }
+              { text: '算法', link: '/front-end/algorithm/' },
+              { text: '面试', link: '/front-end/interview/' },
             ]
           },
           { 

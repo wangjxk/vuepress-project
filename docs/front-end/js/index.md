@@ -154,7 +154,14 @@ var name = 'duck';
 person.say.call(window, 'hello'); //duck say hello
 
 var arr = [1, 2, 3, 4];
-Math.max.apply(null, arr); //4
+Math.max.apply(null, arr); //4, null表示不改变this指向
+
+function multiply (x, y, z) {
+    return x * y * z;
+}
+var double = multiply.bind(null, 2);
+//Outputs: 24
+console.log(double(3, 4));
 
 var person1 = {
   name: 'dog',
@@ -197,7 +204,33 @@ console.log(a.fn().call(a)); //15
 4. [Promise深度学习---我のPromise/A+实现](https://juejin.im/post/5a59e78ff265da3e3e33ba6e)
 5. [【第1738期】100 行代码实现 Promises/A+ 规范](https://mp.weixin.qq.com/s/Yrwe2x6HukfqJZM6HkmRcw)
 
-### 2、六大方法
+###  2、构造函数和状态
+
+#### 1. 构造函数
+
+```JavaScript
+var promise = new Promise(function(resolve, reject) {
+    // 异步处理
+    // 处理结束后、调用resolve 或 reject
+});
+```
+
+#### 2. 状态
+
+<img src="/img/promise-status.png">
+
+* 初始状态为pending
+
+* 执行resolve事件，状态变为fulfilled，执行onFulfilled函数。
+
+* 执行reject事件，状态变为rejected，执行onRejected函数。
+
+<img src="/img/promise-then-catch.png">
+
+* then方法为promise对象注册onFulfilled和onRejected函数
+* catch方法为promise对象注册onRejected函数
+
+### 3、六大方法
 
 #### 1. Promise.resolve
 
@@ -227,9 +260,9 @@ new Promise(function(resolve,reject){
 
 #### 3. Promise.then
 
-**① 回调函数异步执行**
+promise.then(onFulfilled, onRejected)
 
-我们先来看一段代码：
+**① 回调函数异步执行**
 
 ```javascript
 var promise = new Promise(function (resolve){
@@ -242,9 +275,7 @@ promise.then(function(value){
 console.log("outer promise"); // 2
 ```
 
-按照我们之前对`Promise`的理解，当我们看到`Promise`对象立刻进入`resolve`状态，是不是就会触发`Promise.then`中方法执行呢？答案是肯定的，但是要注意：.then中指定的方法调用是异步执行的，换句话说状态的改变是异步的触发`Promise.then`当中的函数执行的。这个并不是什么新鲜的知识点，你可以回去看，我们当初是把`Promise.then`方法归类到了微任务，而不是`Promise`本身或者`Promise`的其他方法。
-
-至于为什么`Promise`在异步回调函数当中统一采用异步调用的原因，其实是来自实践的结果，在过去大量的实践中发现如果是同步调用，代码书写的位置和顺序会和预期不符，还会导致栈溢出或者异常处理错乱等问题，所以在`Promise/A+`统一规定：Promise只能使用异步调用方式
+`Promise/A+`统一规定：Promise只能使用异步调用方式
 
 **② 返回值**
 
@@ -370,7 +401,7 @@ Promise.all(promiseArr).then(res => {
 
 为什么从这个例子能看出数组当中的`Promise`是并行的？因为所有`Promise`执行完只用了7秒，如果4个`Promise`是按顺序执行的，那么应该是16秒，或者在7-16之间，因为4个`Promise`并不是同时执行的，同时执行的话总时间就是那个花费时间最长的`Promise`
 
-当然还有一个很重要的点，就是如果所有的`Promise`中只有一个执行错误，那么整个`Promise.all`不会走`Promise.all().then()`这个流程了，而是走`Promise.all().catch()`这个流程，但是要注意的是虽然走到了Promise.all().catch()这个流程，但是不影响其他Promise的正常执行
+当然还有一个很重要的点，就是如果所有的`Promise`中只有一个执行错误，那么整个`Promise.all`不会走`Promise.all().then()`这个流程了，而是走`Promise.all().catch()`这个流程，但是要注意的是虽然走到了`Promise.all().then()`这个流程，但是不影响其他Promise的正常执行
 
 #### 6. Promise.race
 
@@ -413,7 +444,7 @@ Promise.race(promiseArr).then(res => {
 - 第一层循环：i为0的时候异步触发了`Promise.race().catch()`，这里面的回调代码被放在了微队列当中，后面的3个`setTimeout`宏任务的回调函数代码被放在了`timer`阶段中的队列当中（其实并不是这样，因为3个定时器都有延迟，都是在后面的事件循环中添加进来的）
 - 第二层循环：清空微任务队列，所以控制台打印出了错误，然后清空宏任务，分别打印出3000，5000，7000
 
-### 3、错误捕获
+### 4、错误捕获
 
 #### 1. 使用reject而不是throw
 
@@ -489,7 +520,7 @@ promise.then(function () {
 });
 ```
 
-### 4、返回值
+### 5、返回值
 
 关于返回值的知识其实我们在前面都已经讲过，这里总结一下并举个例子巩固一下：
 
