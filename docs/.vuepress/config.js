@@ -34,6 +34,6 @@ module.exports = {
           }
         ],
         lastUpdated: 'Last Updated', // string | boolean
-        sidebar: 'auto'      
+        sidebar: 'auto' 
     }
 }
