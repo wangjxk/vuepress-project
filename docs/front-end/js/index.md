@@ -228,6 +228,7 @@ var promise = new Promise(function(resolve, reject) {
 <img src="/img/promise-then-catch.png">
 
 * then方法为promise对象注册onFulfilled和onRejected函数
+
 * catch方法为promise对象注册onRejected函数
 
 ### 3、六大方法
