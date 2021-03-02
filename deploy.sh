@@ -24,6 +24,6 @@ git push -f git@github.com:wangjxk/wangjxk.github.io.git master
 # 如果发布到 https://<USERNAME>.github.io/<REPO>
 # git push -f git@github.com:<USERNAME>/<REPO>.git master:gh-pages
 
-rm -rf docs/.vuepress/dist
+rm -rf *
 
 cd -

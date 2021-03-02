@@ -19,9 +19,16 @@ module.exports = {
               { text: 'css', link: '/front-end/css/' },
               { text: 'vue', link: '/front-end/vue/' },
               { text: 'webpack', link: '/front-end/tools/webpack' },
+              { text: '小程序', link: '/front-end/mini-program/' },
               { text: '工具', link: '/front-end/tools/tools' },
               { text: '算法', link: '/front-end/algorithm/' },
               { text: '面试', link: '/front-end/interview/' },
+            ]
+          },
+          {
+            text: '前端进阶',
+            items: [
+              { text: '面试初探', link: '/front-end-course/interview_02.28' },
             ]
           },
           { 
