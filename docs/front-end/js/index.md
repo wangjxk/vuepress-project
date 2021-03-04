@@ -551,3 +551,328 @@ setTimeout(() => {
 - 所以这里很迷惑人的一点就是`p1`最开始是指向`Promise_1`的，当`Promise_2`返回的时候，它又指向了`Promise_2`
 - 最后定时器经过一秒打印出2，因为`Promise_2`在被返回的时候就是`fulfilled`状态，`then`函数当中的回调函数自然而然的被异步触发。
 
+### 6、async和await
+
+co模块的语法糖（用于generator函数的自动执行）
+
+```javascript
+(function* (){
+	var f1 = yield readFile('/etc/fstab')
+    var f2 = yield readFile('/etc/shells')
+    console.log(f1.toString())
+})()
+```
+
+资料：
+
+1、[深入理解 ES7 的 async/await](https://juejin.cn/post/6844903457170653198)
+
+2、[async/await 优雅的错误处理方法](https://juejin.cn/post/6844903767129718791)
+
+3、[如何在 JS 循环中正确使用 async 与 await](https://juejin.cn/post/6844903860079738887)
+
+参考总结：
+
+- 如果一个函数通过`async`来声明，则一定可以通过`await`关键字来取到该函数的返回值。
+- 如果一个函数通过`async`来声明，则一定也可以通过`.then()`方法来取到该函数返回的`promise`中的值(因为`return`出来的结果一定是`promise`对象)
+- 如果一个函数没有通过`async`来声明，但只要`return`出现的是`promise`对象 ，则也可以通过`await`来拿到`promise`里面的取值。
+- 如果一个函数没有通过`async`来声明，但只要`return`出来一个`promise`，也可以通过`.then()`拿到`promise`里面值（在没有`async/await`的年代就是这样做的）
+- 如果一个函数通过`async`声明，则在该函数内部可以使用`await`，也可以使用`.then()`
+- 如何一个函数没有通过`async`声明，则在该函数内部不可以使用`await`，但是可以使用`.then()`
+
+#### 1、async
+
+**① 语法糖**
+
+`async`关键词是添加在函数定义之前的，一个`async`函数是定义会返回`promise`的函数的简便写法。比如，以下两个定义是等效的：
+
+```javascript
+function f() {
+    return Promise.resolve('TEST');
+}
+
+// asyncF is equivalent to f!
+async function asyncF() {
+    return 'TEST';
+}
+```
+
+相似地，会抛出错误的`async`函数等效于返回将失败的`promise`的函数：
+
+```javascript
+function f() {
+    return Promise.reject('Error');
+}
+// asyncF is equivalent to f!
+async function asyncF() {
+    throw 'Error';
+}
+```
+
+**② async函数的返回值**
+
+其实`async`返回值有下面这4种情况：
+
+- 返回值是Promise对象
+
+  这种情况是最常见的，也是符合`async`定义的
+
+  ```javascript
+  const request = require('request');
+  async function f1() {
+      return new Promise(function(resolve, reject) {
+          request('http://www.baidu.com',function(err, res, body) {
+              resolve(body)
+          })
+      })
+  }
+  (async function() {
+      console.log(f1());
+  })()
+  ```
+
+- 返回值是普通值
+
+  如果`return`出来一个普通值，会被包装成一个`promise`对象。该`promise`状态为`fullfilled`, 该`promise`的值为该简单值。可以使用`.then()`方法取到该`promise`对象的值（该值就是`async`声明的函数返回来的简单值）
+
+  ```javascript
+  async function f1 () {
+      return 10;
+  }
+  
+  console.log(f1());     // Promise {<resolved>: 10}
+  fn1().then(function (x) {
+    console.log(x);      // 10
+  })
+  ```
+
+- 返回值是Error类型
+
+  如果`return`出来是一个`Error`类型，则同样会被包装成一个`promise`对象，该`promise`对象的状态是`reject`, 值是`Error`的信息，想取出来该`promise`的报错信息，可以通过`.then`的第二个参数，或者通过`.catch`方法
+
+  ```javascript
+  async function f1() {
+    throw new Error('ssss');
+  }
+  f1().catch(function(e){
+    console.log(e)
+  })
+  ```
+
+- 没有返回值
+
+  如果没有`return`任何东西，则同样会返回一个`promise`对象。该`promise`对象的状态为`fullfilled`，该`promsie`的值为`undefined`.
+
+  ```javascript
+  const rp = require('request-promise');
+  async function f1() {
+      await rp('http://www.beibei.com');
+  }
+  
+  (async () => {
+      console.log(await f1());          // undefined
+  })()
+  ```
+
+#### 2、Await
+
+`await`关键字，它只能在`async`函数内使用，让我们可以等待一个`promise`。
+
+如果在`async`函数外使用`promise`，我们依然需要使用`then`和回调函数，例如普通函数和全局函数。
+
+所以，目前取出`promise`对象中的值的方法有两种：.then 和 await
+
+**① 最大的作用**
+
+await最大的作用就是代替.then方法,让整个代码成为同步的写法，更容易理解
+
+- 串行异步
+
+  当串联异步的操作时，`await`要比`.then`方法更加简洁
+
+  ```javascript
+  // 使用 .then 进行串联操作
+  function asyncFunc() {
+    otherAsyncFunc1()
+    .then(function(x){
+      return otherAsyncFunc2();
+    })
+    .then(function(x) {
+      console.log(x)
+    })
+  }
+  
+  // 使用await关键字
+  async function asyncFunc() {
+      const result1 = await otherAsyncFunc1();
+      const result2 = await otherAsyncFunc2();
+  }
+  ```
+
+- 并行异步
+
+  虽然并行异步的代码还是离不开`Promise.all`或者`Promise.race`方法，但是用来处理最终的并行结果的代码也是很简洁的
+
+  ```javascript
+  // 使用 .then 方法
+  function fn1() {
+      let p1 = rp('http://www.baidu.com');
+      let p2 = rp('http://www.baidu.com');
+      Promise.all([p1, p2]).then(function([res1, res2]) {
+          console.log(res1,res2)
+      })
+  }
+  
+  // 使用await 关键字
+  async function fn1() {
+      let p1 = rp('http://www.baidu.com');
+      let p2 = rp('http://www.baidu.com');
+      let [res1, res2] = await Promise.all([p1, p2]);
+      console.log(res1,res2)
+  }
+  ```
+
+**② await本质**
+
+从上面我们列出的这么多代码来看，`await`的本质就是`.then`方法的语法糖，事实上，`async/await`其实会翻译成`promise`与`then`回调。每次我们使用`await`，解释器会创建一个`promise`然后把`async`函数中的后续代码（也就是书写在`await`后面的代码）放到`then`回调里，并被计划在`promise`完成之后执行。所以下面两段代码是等价的：
+
+```javascript
+// await写法
+await foo();         
+console.log("hello");
+
+// .then写法
+foo().then(() => {
+    console.log("hello");
+});
+```
+
+所以`await`关键字给我们的感觉是会让代码执行到`await`这一行的时候，“暂停执行”，等到异步的操作有了结果，再继续往下执行。那么，问题来了，`await`关键字会阻塞线程吗？不会，因为还是我们上面说的那句话：await本质是.then的语法糖, `await`并没有改变js的单线程的本质，没有改变`event_loop`的模型，只是方便我们写代码，更快捷，更清晰,如下所示：
+
+```javascript
+let p1 = new Promise((resolve,reject)=> {
+  console.log(1)
+  setTimeout(()=> {
+    resolve(6)
+  },1000)
+})
+
+async function multipleRequestAsync() {
+  console.log(3)
+  let result = await p1
+  console.log(result)
+  console.log(7)
+}
+
+console.log(2)
+multipleRequestAsync()
+console.log(4)
+console.log(5)
+// 1 2 3 4 5 6 7
+```
+
+所以，通过上面这一段代码我们就能明白：
+
+await关键字不会阻塞js的event_loop的线程。当代码执行到async函数遇到await关键词时，不会继续往下执行,而是会发起异步调用，推入异步任务队列，等待异步的结果，但是此时node线程并不会闲到无所事事，而是继续执行async函数被调用的那一行下面的代码。等到异步操作的结果发生了变化时，将异步结果推入任务队列，event_loop从队列中取出事件，推入到执行栈中。
+
+#### 3、错误处理
+
+##### 1. try-catch
+
+因为当我们使用`async-await`的时候我们的代码是同步的写法，同步的错误处理理所应当会先想到的就是`try-catch`，所以对于`async-await`的处理我们可以采用`try-catch`:
+
+```javascript
+(async () => {
+  const fetchData = () => {
+      return new Promise((resolve, reject) => {
+          setTimeout(() => {
+              reject('fetch data is me')
+          }, 1000)
+      })
+  }
+
+  try {
+    let result = await fetchData()
+    console.log(result)
+  } catch (error) {
+    console.log(error) //fetch data is me
+  }
+})()
+```
+
+实际通过上述的代码可以看到：try-catch的方法在对于错误类型单一的情况是简洁又明了的，但是如果是不同的类型错误类型如果我们还采用`try-catch`的方法也不是不行，只能在错误处理的代码上就要分类处理，还不一定能准确知道到底是哪部分出了问题，所以使用`try-catch`在多类型错误的分类和定位上是吃亏的：
+
+```javascript
+  try {
+    let result = await fsData()        // 读取文件
+    let result = await requestData()   // 网络请求
+    let result = await readDb()        // 读取数据库
+  } catch (error) {
+    // 不同的错误进行分类
+  }
+```
+
+##### 2. .then和catch方法输出值
+
+针对`try-catch`的问题我们希望就是在有不同类型错误可能出现的情况下我们还是能准确并分别对不同的类型做处理。而`async/await`本质就是`promise`的语法糖，既然是`promise`那么就可以使用`then`函数和catch函数，通过then和catch输出值。
+
+```javascript
+(async () => {
+  const fetchData = () => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+          reject('fetch data is me')
+      }, 1000)
+    })
+  }
+
+  const data = await fetchData().then(data => data ).catch(err => console.log(err))
+})()
+```
+
+当存在不同类型的错误的时候，我们就能分别在对应的不同的`Promise`的链的末尾的`catch`当中书写不同的处理函数
+
+```javascript
+const data = await fsData().then(data => data ).catch(err => // 文件读取错误的处理)
+const data = await requestData().then(data => data ).catch(err => // 网络请求错误的处理)
+const data = await readDb().then(data => data ).catch(err => // 数据库读写错误的处理)
+```
+
+##### 3. 更优雅的方式
+
+使用then和catch函数及数组解构区分正常和异常结果，封装公共处理函数。
+
+```javascript
+function handleError(err) {
+  if(err !== null)
+  // 具体处理错误
+}
+function handleData(data) {
+  if(data !== null)
+  // 具体处理结果
+}
+const [err, data] = await fetchData().then(data => [null, data] ).catch(err => [err, null])
+handleError(err)
+handleData(data)
+    
+// 抽离成公共方法
+const awaitWrap = (promise) => {
+  return promise
+    .then(data => [null, data])
+    .catch(err => [err, null])
+}
+
+const [err1, data1] = await awaitWrap(fsData())
+handleFsError(err1)
+handleFsData(data1)
+```
+
+####  4、循环中的使用
+
+* 如果你想连续执行`await`调用，请使用`for`循环(或任何没有回调的循环)。
+
+* 永远不要和`forEach`一起使用`await`，而是使用`for`循环(或任何没有回调的循环)。
+
+* 不要在 `filter` 和 `reduce` 中使用 `await`，如果需要，先用 `map` 进一步骤处理，然后在使用 `filter` 和 `reduce` 进行处理。
+
+待梳理
