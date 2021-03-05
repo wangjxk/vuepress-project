@@ -4,7 +4,9 @@
 
 参考：[git菜鸟教程](https://www.runoob.com/git/git-tutorial.html)
 
-```
+```bash
+git config --global user.name "lidu"
+git config --global user.email "lidu@example.com"
 ssh-keygen -t rsa -C "youremail@example.com"
 git init
 git add -A
@@ -18,7 +20,7 @@ git push -f git@github.com:wangjxk/vuepress-project.git master
 
 参考：[npm菜鸟教程](https://www.runoob.com/nodejs/nodejs-npm.html)
 
-```
+```bash
 npm install -g cnpm --registry=https://registry.npm.taobao.org
 npm cache clean
 

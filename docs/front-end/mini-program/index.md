@@ -23,13 +23,8 @@
 #### 2、鉴权方式
 
 * HTTP Basic Authentication
-
 * session-cookie（后端/灰度）
-
 * token(JWT)
-
-  json web token
-
 * OAuth（一键登录）
 
 wx.login\wx.checkSession\wx.request
