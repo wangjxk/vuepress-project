@@ -20,33 +20,215 @@
 
 ### 1、什么是事件循环
 
+javaScript执行事件的循环机制为事件循环。
 
+JavaScript的执行机制主要是以下三步：
 
+* 所有同步任务都在主线程上执行，形成一个执行栈（execution context stack）。
+* 主线程之外，还存在一个‘任务队列’（task queue）。只要异步任务有了运行结果，就在”任务队列”之中放置一个事件。
+* 一旦主线程的栈中的所有同步任务执行完毕，系统就会读取任务队列，选择需要首先执行的任务然后执行。
 
+在此过程中，主线程要做的就是从任务队列中去实践，执行事件，执行完毕，再取事件，再执行事件…这样不断取事件，执行事件的循环机制就叫做事件循环机制。（需要注意的的是当任务队列为空时，就会等待直到任务队列变成非空。）
 
 ### 2、为什么有事件循环
 
+javaScript是单线程的，JavaScript中的所有任务都需要排队依次完成，为了解决线程的阻塞问题，使用事件循环解决。
 
+* JavaScript的主要用途是与用户互动，以及操作DOM。如果它是多线程的会有很多复杂的问题要处理，比如有两个线程同时操作DOM，一个线程删除了当前的DOM节点，一个线程是要操作当前的DOM阶段，最后以哪个线程的操作为准？为了避免这种，所以JS是单线程的。即使H5提出了web worker标准，它有很多限制，受主线程控制，是主线程的子线程。
+
+* 非阻塞：通过 event loop 实现。
 
 ### 3、什么是宏任务和微任务
 
+* 宏任务：整体代码、setTimeout、setInterval、I/O操作、UI渲染等
 
+* 微任务：new Promise().then()、MutaionObserver
 
 ### 4、为什么有微任务
 
+宏任务先进先出，针对优先级高的任务需尽快执行，无法满足。
 
+页面渲染事件，各种IO的完成事件等随时被添加到任务队列中，一直会保持先进先出的原则执行，我们不能准确地控制这些事件被添加到任务队列中的位置。但是这个时候突然有高优先级的任务需要尽快执行，那么一种类型的任务就不合适了，所以引入了微任务队列。
 
 ### 5、浏览器的事件循环是怎么样的
 
+关于微任务和宏任务在浏览器的执行顺序是这样的：
 
+执行一只task（宏任务） 
+
+执行完micro-task队列 （微任务） 
+
+如此循环往复下去 
 
 ### 6、nodejs的事件循环是怎么样的
 
+大体的task（宏任务）执行顺序是这样的： 
 
+* timers定时器：本阶段执行已经安排的 setTimeout() 和 setInterval() 的回调函数。 
+
+* Pending callbacks待定回调：执行延迟到下一个循环迭代的 I/O 回调。 
+
+* idle, prepare：仅系统内部使用。 
+
+* Poll 轮询：检索新的 I/O 事件;执行与 I/O 相关的回调（几乎所有情况下，除了关闭的回调函数，它们由计时器和 setImmediate() 排定的之外），其余情况 node 将在此处阻塞。 
+
+* check 检测：setImmediate() 回调函数在这里执行。 
+
+* close callbacks 关闭的回调函数：一些准备关闭的回调函数，如：socket.on(‘close’, …)。 
+
+微任务和宏任务在Node的执行顺序 
+
+1、Node V10以前： 
+
+执行完一个阶段的所有任务 
+
+执行完nextTick队列里面的内容 
+
+然后执行完微任务队列的内容 
+
+2、Node v10以后： 
+
+和浏览器的行为统一了，都是每执行一个宏任务就执行完微任务队列。
 
 ### 7、事件循环题目
 
+1、题目1
 
+```javascript
+async function async1(){
+    console.log('async1 start')
+    await async2()
+    console.log('async1 end')
+}
+
+async function async2(){
+    console.log('async2')
+}
+
+console.log('script start')
+setTimeout(function(){
+    console.log('setTimeout')
+}, 0)
+async1()
+
+new Promise(function (resolve){
+    console.log('promise1')
+    resolve()
+}).then(function(){
+    console.log('promise2')
+})
+
+console.log('script end')
+
+/*
+1、执行宏任务，放入宏任务栈、微任务队列
+t：setTimeout  mt：async1 end | promise2
+script start
+async1 start
+async2
+promise1
+script end
+2、执行维任务队列
+async1 end
+promise2
+3、执行宏任务栈
+setTimeout
+*/
+```
+
+2、题目2
+
+```javascript
+console.log('start')
+setTimeout（（）=>{
+    console.log('children2')
+    Promise.resolve().then(()=>{
+        console.log('children3')
+    })
+}, 0）
+
+new Promise(function (resolve, reject){
+    console.log('children4')
+    setTimeout(function(){
+        console.log('children5')
+        resolve('children6')
+    }, 0)
+}).then((res) => {
+    console.log('children7')
+    setTimeout(()=>{
+        console.log(res);
+    }, 0)
+})
+
+/*
+1、执行宏任务
+t： children2|children5(每个宏任务会放入一个宏任务队列，分布执行)  mt:
+start
+children4
+2、执行微任务
+3、执行宏任务
+t：children5   mt: children3
+children2
+4、执行微任务
+t：children5   mt: 
+children3
+5、执行宏任务
+t：children6   mt: children7
+children5
+6、执行微任务
+t：children6   mt: 
+children7
+7、执行宏任务
+children6
+```
+
+3、题目3
+
+```javascript
+const p= function(){
+    return new Promise((resolve, reject)=>{
+        const p1 = new Promise(()=>{
+            setTimeout(()=>{
+                resolve(1)
+            }, 0)
+            resolve(2)
+        })
+        p1.then(res => {
+            console.log(res)
+        })
+        console.log(3)
+        resolve(4)
+    })
+}
+p().then(res => {
+    console.log(res)
+})
+console.log('end')
+
+/*
+1、执行宏任务
+t：   mt: 2 | 4
+3
+end
+2、执行微任务
+t：   mt:
+2
+4
+*/
+/* 注释resolve(2)
+1、执行宏任务
+t：   mt: 4
+3
+end
+2、执行微任务
+t：resolve（1）   mt: 
+4
+3、执行宏任务
+t：   mt: 1
+4、执行微任务
+1
+*/
+```
 
 ## 3、事件冒泡和捕获机制
 
