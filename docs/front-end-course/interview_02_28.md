@@ -487,9 +487,34 @@ const isPromise = Object.prototype.toString.call(promiseArray[i]) === '[object P
 //装饰器写法
 const cacheMap = new Map()
 function enableCache(target, name, descriptor){
-    const 
+    const val = descriptor.value;
+    descriptor.value = async function(...args){
+        const cacheKey = name + JSON.stringify(args)
+        if(!cacheMap.get(cacheKey)){
+            const cacheValue = Promise.resolve(val.apply(this, args)).catch(_ => {
+                cacheMap.set(cacheKey, null)
+            })
+            cacheMap.set(cacheKey, cacheValue)
+        }
+        return cacheMap.get(cacheKey)
+    }
+    return descriptor
 }
+
+class PromiseClass{
+    @enableCache
+    static async getInfo(){
+        
+    }
+}
+
+PromiseClass.getInfo() //接口获取
+PromiseClass.getInfo() //缓存获取
 ```
+
+* 装饰器Decorator，ES2017引入，Babel转码器已支持。
+
+* 可修饰类、修饰类的方法，不能修饰普通函数，存在函数提升。
 
 ## 6、算法题：接雨水
 
@@ -508,3 +533,34 @@ function enableCache(target, name, descriptor){
 输入：height = [4,2,0,3,2,5] 
 
 输出：9 
+
+```javascript
+//暴力解法，时间复杂度o(n^2)，空间复杂度O(1)
+function trap(height=[]){
+    if(height.length === 0){
+        return 0
+    }
+    const n = height.length
+    let res = 0
+    for(let i=0; i<n-1; i++){
+        let l_max = 0
+        let r_max = 0
+        for(let j=i; j<n; j++){
+            //右边最高柱子
+            r_max = Math.max(r_max, height[j])
+        }
+        for(let j=i; j>=0; j--){
+            //左边最高柱子
+            l_max = Math.max(l_max, height[j])
+        }
+        res += Math.min(l_max, r_max)-height[i]
+    }
+    return res
+}
+
+//单循环解法
+
+
+//双指针解法
+```
+
