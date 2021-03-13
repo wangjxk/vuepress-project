@@ -4,7 +4,34 @@
 
 问题：说一下工作中解决过的比较困难的问题（说一下自己项目中比较有亮点的地方） 
 
-平时学习或者工作中, 最好有记笔记的习惯, 遇到了什么问题, 自己一步一步怎么解决的? 到时候 无论是写简历准备面试, 还是碰到类似的问题, 都可以快速查找。学习一定要包含输入和输出
+解析：平时学习或者工作中, 最好有记笔记的习惯, 遇到了什么问题, 自己一步一步怎么解决的? 学习的输入和输出
+
+解析：问题的基本结构与解决问题的基本步骤
+
+* 设定主题
+
+  * 通过事先调查，认知现状
+  * 确定主题、目的、完成日期等。
+* 期望的愿景（目标）
+
+  * 想达成怎样的目标，明确达成目标后的样子
+  * 设定更具体的目标
+* 现状分析
+
+  * 掌握现状的事实数据
+  * 掌握实际情况，收集可实现的解决方案
+* 问题点（对差距的认知）
+  * 把握期望愿景和现状的差距
+  * 分享意识到的问题点，研究解决问题的突破口
+* 改革方针（概念）
+  * 明确打破现状的改革方针
+  * 明确解决问题的基本想法
+* 规划解决方案
+  * 针对期望的愿景制定具体的解决方案
+  * 制定执行计划，确保必要的人力和预算
+* 实施
+* 解决方案的实施与实施结果的评估
+  * 纠正对策，完成目标
 
 ## 2、事件循环
 
@@ -520,47 +547,81 @@ PromiseClass.getInfo() //缓存获取
 
 给定 n 个非负整数表示每个宽度为 1 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。 
 
-示例 1： 
+输入：height = [0,1,0,2,1,0,1,3,2,1,2,1]   输出：6 
 
-输入：height = [0,1,0,2,1,0,1,3,2,1,2,1] 
-
-输出：6 
-
-解释：上面是由数组 [0,1,0,2,1,0,1,3,2,1,2,1] 表示的高度图，在这种情况下，可以接6个单位的雨水（蓝色部分表示雨水）。 
-
-示例 2： 
-
-输入：height = [4,2,0,3,2,5] 
-
-输出：9 
+思路：当前柱子能接的雨水 = min(左边最高柱子，右边最高柱子) - 当前柱子高度
 
 ```javascript
-//暴力解法，时间复杂度o(n^2)，空间复杂度O(1)
-function trap(height=[]){
+//暴力解法：空间复杂度O(1) 时间复杂度O(n^2)
+function trap(height = []){
     if(height.length === 0){
         return 0
     }
-    const n = height.length
     let res = 0
+    const n = height.length
     for(let i=0; i<n-1; i++){
-        let l_max = 0
-        let r_max = 0
+        let lmax = 0, rmax =0
         for(let j=i; j<n; j++){
-            //右边最高柱子
-            r_max = Math.max(r_max, height[j])
+            rmax = Math.max(height[j], rmax) //右边柱子
         }
         for(let j=i; j>=0; j--){
-            //左边最高柱子
-            l_max = Math.max(l_max, height[j])
+            lmax = Math.max(lmax, height[j])
         }
-        res += Math.min(l_max, r_max)-height[i]
+        res += Math.min(rmax, lmax) - height[i]
     }
+
     return res
 }
 
-//单循环解法
+//优化1：空间复杂度O(n) 时间复杂度O(n)
+//for循环抽出
+function trap1(height=[]){
+    if(height.length === 0){
+        return 0
+    }
+    let res = 0
+    const n = height.length
+    let lmax = new Array(n)
+    let rmax = new Array(n)
+    lmax[0] = height[0]
+    rmax[n-1] = height[n-1]
+    
+    for(let i=1; i<n; i++){
+        lmax[i] = Math.max(lmax[i-1], height[i])
+    }
+    for(let i=n-2; i>=0; i--){
+        rmax[i] = Math.max(rmax[i+1], height[i] )
+    }
+    for(let i=0; i<n; i++){
+        res += Math.min(lmax[i], rmax[i]) - height[i]
+    }
 
+    return res
+}
 
-//双指针解法
+//优化2：空间复杂度O(1) 时间复杂度O(n)
+//双指针
+function trap2(height=[]){
+    if(height.length === 0){
+        return 0
+    }
+    let res = 0
+    const n = height.length
+    let lmax= height[0]  //左边指针移动截止处，左边的最大值
+    let rmax= height[n-1] //右边指针移动截止处，右边的最大值
+    let left =0, rigth = n-1
+    while(left<right){
+        lmax = Math.max(lmax, height[left])
+        rmax = Math.max(rmax, height[rigth])
+        if(lmax < rmax){ //指针移动，只添加较小部分值
+            res += lmax - height[left]
+            left++
+        }else{
+            res += rmax - height[rigth]
+            right++
+        }
+    }
+    return res
+}
 ```
 
