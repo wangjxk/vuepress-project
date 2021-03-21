@@ -28,7 +28,8 @@ module.exports = {
           {
             text: '前端进阶',
             items: [
-              { text: '面试初探', link: '/front-end-course/interview_02_28' },
+              { text: '面试1', link: '/front-end-course/interview_02_28' },
+              { text: '面试2', link: '/front-end-course/interview_03_14' },
             ]
           },
           { 

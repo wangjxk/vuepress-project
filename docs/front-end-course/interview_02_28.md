@@ -551,6 +551,8 @@ PromiseClass.getInfo() //缓存获取
 
 思路：当前柱子能接的雨水 = min(左边最高柱子，右边最高柱子) - 当前柱子高度
 
+<img src="/img/trap.png">
+
 ```javascript
 //暴力解法：空间复杂度O(1) 时间复杂度O(n^2)
 function trap(height = []){
