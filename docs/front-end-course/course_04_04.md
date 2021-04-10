@@ -28,7 +28,7 @@
 })(jQuery) //注入对象
 ```
 
-##1、commonJS
+## 1、commonJS
 
 * 服务器端node，浏览器端webpack|browserfy
 * 文件即模块，模块加载同步：服务器端模块加载是运行时同步加载，浏览器模块加载是提前编译打包处理
@@ -75,7 +75,7 @@ console.log(a.age) // 18
   * CommonJS在引入时是加载整个模块，生成一个对象，然后再从这个生成的对象上读取方法和属性
   * ESModule不是对象，而是通过export暴露出要输出的代码块，在import时使用静态命令的方法引用制定的输出代码块，并在import语句处执行这个要输出的代码，而不是直接加载整个模块
 
-##2、AMD
+## 2、AMD
 
 * AMD(Asynchronous module definition)异步的模块定义，浏览器端运行，所有模块默认都是异步加载
 
