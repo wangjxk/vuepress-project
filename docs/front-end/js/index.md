@@ -203,6 +203,7 @@ console.log(a.fn().call(a)); //15
 3. [从手写一个符合Promise/A+规范Promise来深入学习Promise](https://juejin.im/post/5b854f22e51d4538e567b7de)
 4. [Promise深度学习---我のPromise/A+实现](https://juejin.im/post/5a59e78ff265da3e3e33ba6e)
 5. [【第1738期】100 行代码实现 Promises/A+ 规范](https://mp.weixin.qq.com/s/Yrwe2x6HukfqJZM6HkmRcw)
+6. [从零开始手写promise](https://zhuanlan.zhihu.com/p/144058361)
 
 ###  2、构造函数和状态
 
@@ -869,10 +870,115 @@ handleFsData(data1)
 
 ####  4、循环中的使用
 
+参考资料：[如何在 JS 循环中正确使用 async 与 await](https://juejin.cn/post/6844903860079738887)
+
 * 如果你想连续执行`await`调用，请使用`for`循环(或任何没有回调的循环)。
 
 * 永远不要和`forEach`一起使用`await`，而是使用`for`循环(或任何没有回调的循环)。
 
 * 不要在 `filter` 和 `reduce` 中使用 `await`，如果需要，先用 `map` 进一步骤处理，然后在使用 `filter` 和 `reduce` 进行处理。
 
-待梳理
+## 3、generator
+
+### 1、迭代器 Iterator
+
+迭代器Iterator 是 ES6 引入的一种新的遍历机制，一种接口，本质是一个指针对象，供for...of消费。
+
+* 迭代器有next()方法，返回对象{value:'', done: false}，第一次调用时返回第一个值
+* 迭代器部署在Symbol.iterator属性上
+* Array、Map、Set、String、函数的arguments对象等具有原生Iterator接口
+
+```js
+let arr = ['a', 'b', 'c']
+let iter = arr[Symbol.iterator]();
+iter.next() //{value: 'a', done: false}
+iter.next() //{value: 'b', done: false}
+iter.next() //{value: 'c', done: false}
+iter.next() //{value: undefined, done: true}
+
+for(let a in arr){
+    console.log(a)  //0 1 2, 取键名
+}
+for(let a of arr){
+    console.log(a)  //a b c, 取键值
+}
+```
+
+### 2、generator
+
+生成遍历器对象的函数，使用*表示函数（星号可以紧挨着function关键字，也可以在中间添加一个空格），内部使用yield定义内部状态。
+
+* 每当执行完一条yield语句后函数就会自动停止执行, 直到再次调用next();
+
+* yield关键字只可在生成器内部使用，在其他地方使用会导致程序抛出错误
+
+* 可以通过函数表达式来创建生成器, 但是不能使用箭头函数
+* 可以在generator函数运行的不同阶段从外部内部注入不同的值，从而改变函数的行为
+  * yield语句无返回值，总是返回undefined
+  * next方法可以带一个参数，参数被当做上一条yield的返回值。
+
+```js
+function* generator() {
+ const list = [1, 2, 3];
+ for (let i of list) {
+ yield i;
+ } }
+let g = generator();
+console.log(g.next()); // {value: 1, done: false}
+console.log(g.next()); // {value: 2, done: false}
+console.log(g.next()); // {value: 3, done: false}
+console.log(g.next()); // {value: undefined, done: true}
+
+function* foo(x){
+    var y = 2 * (yield(x + 1));
+    var z = yield (y / 3);
+    return (x + y + z);
+}
+
+var a = foo(5);
+a.next() //{value: 6, done: false}
+a.next() //{value: NaN, done: false}， 2* undefined / 3 = NaN
+a.next() //{value: NaN, done: true}， 5 + NaN + undefined = NaN
+
+var b = foo(5)
+b.next() //｛value: 6, done: false｝
+b.next(12) //{value: 8, done: false}  2 * 12 / 3 = 8
+b.next(13) //{value: , done: true} 5 + 2 * 12 + 13 = 42
+```
+
+### 3、generator自动执行
+
+```js
+function longTimeFn(time) {
+ 	return new Promise(resolve => {
+ 		setTimeout(() => {
+ 			resolve(time);
+ 		}, time);
+ 	})
+};
+
+//自动执行封装，递归回调
+function asyncFunc(generator) {
+ 	const iterator = generator(); // 接下来要执行next
+ 	// data为第一次执行之后的返回结果，用于传给第二次执行
+ 	const next = (data) => {
+        	// 第一次执行next时，yield返回的promise实例赋值给了value
+ 			const {value, done} = iterator.next(data);
+            if (done) return;
+ 			value.then((data) => {
+ 				next(data); 
+ 			});
+ 	}
+ 	next();
+};
+
+//生成器函数内自动执行，无需显示的next()
+asyncFunc(function* () {
+ 	let data = yield longTimeFn(1000);
+ 	console.log(data);
+ 	data = yield longTimeFn(2000);
+ 	console.log(data);
+ 	return data;
+})
+```
+

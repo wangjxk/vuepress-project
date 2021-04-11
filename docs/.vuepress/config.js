@@ -30,8 +30,11 @@ module.exports = {
             items: [
               { text: '面试1', link: '/front-end-course/interview_02_28' },
               { text: '面试2', link: '/front-end-course/interview_03_14' },
+              { text: '面试3', link: '/front-end-course/interview_03_28' },
               { text: 'Promise规范和应用', link: '/front-end-course/course_04_03' },
               { text: '模块化整体规范', link: '/front-end-course/course_04_04' },
+              { text: '浏览器对象详解', link: '/front-end-course/course_04_11' },
+              { text: 'ts初探', link: '/front-end-course/course_04_12' }
             ]
           },
           { 
