@@ -266,7 +266,7 @@ resovlePromise(newPromise, x, resolve, reject){
         if(x instanceof MPromise){
             x.then((y)=>{
                 this.resovlePromise(newPromise, y, resolve, reject)
-            }, resolve)
+            }, reject)
         }
 
         //如果x是一个对象或者函数，不为null

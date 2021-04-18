@@ -946,6 +946,70 @@ b.next(12) //{value: 8, done: false}  2 * 12 / 3 = 8
 b.next(13) //{value: , done: true} 5 + 2 * 12 + 13 = 42
 ```
 
+#### 1、throw方法
+
+generatorh函数返回的遍历器对象都有一个throw方法，可以在函数体外抛出错误，然后在Generator函数体内捕获。
+
+* 若Generator函数体内部署了try...catch代码块，那么遍历器的throw方法抛出的错误不会影响下一次遍历，否则遍历终止
+* 一旦Generator执行过程中抛出错误，就不会再执行下去，如果后续调用next方法，返回｛value:undefined, done=true｝对象
+
+```js
+var gen = function* gen(){
+    try{
+        yield console.log('a')
+    }catch(e){
+        console.log(e)
+    }
+    yield console.log('b')
+    yield console.log('c')
+}
+var g = gen()
+console.log(g.next())  //a { value: undefined, done: false }
+console.log(g.throw()) //undefined b { value: undefined, done: false }
+/* g.throw方法被捕获后会自动执行一次next方法，内部部署了try...catch，遍历器的throw方法抛出的异常不会影响下次遍历 */
+console.log(g.next()) //c { value: undefined, done: false }
+console.log(g.next()) //  { value: undefined, done: true }
+
+
+var gen = function* gen(){
+    yield console.log('a')
+    yield console.log('b')
+    yield console.log('c')
+}
+var g = gen()
+console.log(g.next())  // a { value: undefined, done: false }
+console.log(g.throw()) // undefined 报错无法执行
+console.log(g.next())
+
+var gen = function* gen(){
+    yield console.log('a')
+    yield console.log('b')
+    throw new Error('generator break')
+    yield console.log('c')
+}
+var g = gen()
+console.log(g.next()) // a { value: undefined, done: false }
+console.log(g.next()) // b { value: undefined, done: false }
+console.log(g.next()) //报错无法执行
+```
+
+#### 2、return方法
+
+Generator.prototype.return()，返回给的的值，并终结Generator函数的遍历
+
+```js
+var gen = function* gen(){
+    yield console.log('a')
+    yield console.log('b')
+    throw new Error('generator break')
+    yield console.log('c')
+}
+var g = gen()
+console.log(g.next())   //a { value: undefined, done: false }
+console.log(g.return('byebye')) //{ value: 'byebye', done: true }
+console.log(g.next()) //{ value: undefined, done: true }
+```
+
 ### 3、generator自动执行
 
 ```js

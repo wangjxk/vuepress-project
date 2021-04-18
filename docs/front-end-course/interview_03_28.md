@@ -2,27 +2,138 @@
 
 ## 1、相关面试题
 
-1、实现lodash中的get函数：get(data, 'a[3].b') 
+### 1、实现lodash中的get函数：get(data, 'a[3].b') 
 
 ```js
-
+//_.get(object, path, [defaultValue])
+// 根据 object对象的path路径获取值。 如果解析 value 是 undefined 会以 defaultValue 取代。
+// 以免直接使用a[0].c时因a[0]为undefind造成undefind.c报错
+const get = (data, path, defaultValue = void 0) => {
+  const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  // paths => ['a', '3', 'b'];
+  let result = data;
+  for (const path of paths) {
+    result = Object(data)[path];  // edge case data -> null 
+    if (result == null) {
+      return defaultValue;
+    }
+  }
+  return result;
+}
 ```
 
-2、实现 add(1)(2)(3) 柯里化函数
+### 2、实现 add(1)(2)(3) 柯里化函数
+
+ref: [实现add(1)(2)(3)](https://ask.csdn.net/questions/2033011)
+
+函数柯里化概念： 柯里化（Currying）是把接受多个参数的函数转变为接受一个单一参数的函数，并且返回接受余下的参数且返回结果的新函数的技术。
 
 ```js
+//粗暴版本
+function add (a) {
+    return function (b) {
+        return function (c) {
+            return a + b + c;
+        }
+    }
+}
+console.log(add(1)(2)(3)); // 6
 
+//参数长度固定
+const curry = (fn) =>
+(judge = (...args) =>
+    args.length === fn.length
+    ? fn(...args)
+    : (...arg) => judge(...args, ...arg));
+const add = (a, b, c) => a + b + c;
+const curryAdd = curry(add);
+console.log(curryAdd(1)(2)(3)); // 6
+console.log(curryAdd(1, 2)(3)); // 6
+console.log(curryAdd(1)(2, 3)); // 6
+
+//参数长度不固定
+function add (...args) {
+    return args.reduce((a, b) => a + b)
+}
+ 
+function currying (fn) {
+    let args = []
+    return function temp (...newArgs) {
+        if (newArgs.length) {
+            args = [
+                ...args,
+                ...newArgs
+            ]
+            return temp
+        } else {
+            let val = fn.apply(this, args)
+            args = [] //保证再次调用时清空
+            return val
+        }
+    }
+}
+ 
+let addCurry = currying(add)
+console.log(addCurry(1)(2)(3)(4, 5)())  //15
+console.log(addCurry(1)(2)(3, 4, 5)())  //15
+console.log(addCurry(1)(2, 3, 4, 5)())  //15
 ```
 
-3、手写await和async
+### 3、手写await和async
 
 参考：[手写async await的最简实现（20行）](https://juejin.cn/post/6844904102053281806)
 
 ```js
+function fn(s){
+    return new Promise(function(resolve){
+        setTimeout(() => {
+            resolve(s)
+        }, s)
+    })
+}
+//用generator和yield实现await
+function * gFn(){
+    console.time('t1')
+    let t1 = yield fn(1000)
+    console.timeEnd('t1')
+    console.time('t2')
+    let t2 = yield fn(2000)
+    console.timeEnd('t2')
+    return 'success'
+}
 
+function asyncToGenerator(fn){
+    let generator = fn()
+    return new Promise(function(resolve, reject){
+        let step = function(key, args){
+            let res = null
+            try{
+                res = generator[key](args)
+            }catch(e){
+                reject(e)
+            }
+            let {value, done} = res
+            if(done){
+                resolve(value)
+            }else{
+                Promise.resolve(value).then((value) => {
+                    step('next', value)
+                }).catch((e)=>{
+                    step('throw', e)
+                })
+            }
+        }
+        step('next')
+    })
+}
+
+let t = asyncToGenerator(gFn)
+t.then(r => {
+    console.log('r', r)
+})
 ```
 
-4、如何优化 node 镜像制作
+### 4、如何优化 node 镜像制作
 
 - DOCKER_BUILDKIT 查看 dockerfile instruction 耗时
 - FROM YOUR_OLD_DOCK 基于历史最新的业务镜像构建
@@ -34,7 +145,7 @@
 
 关注一下 devOps
 
-5、webpack 热更新原理 
+### 5、webpack 热更新原理 
 
 ```js
 /**
@@ -68,12 +179,60 @@
 // 1. 为什么慢？
 // 2. 跟模块模式有关联吗？ ESM
 // 3. 想想 vite？
-
 ```
 
-6、 最短编辑距离算法问题：给出两个单词word1和word2，计算出将word1 转换为word2的最少操作次数，你总共三种操作方法：插入一个字符、删除一个字符、替换一个字符
+### 6、 最短编辑距离算法问题
 
+给出两个单词word1和word2，计算出将word1 转换为word2的最少操作次数，你总共三种操作方法：插入一个字符、删除一个字符、替换一个字符
 
+考察点：`Levenshtein Distance` 算法，react中使用场景
+
+```js
+/**
+ *  [
+ *    [0, 1, 2],
+ *    [1, x, x],
+ *    [2, x, x]
+ *  ]
+ * */
+
+// bai  -  bay  => 1
+const levenshtein = (s1, s2) => {
+  let l1 = s1.length;
+  let l2 = s2.length;
+  
+  const matrix = [];
+
+  for (let i = 0; i <= l1; i++) {
+    matrix[i] = []; // [[], []]
+
+    for (let j = 0; j <= l2; j++) {
+      if (i === 0) {
+        matrix[i][j] = [j]; // [[0, 1, 2]]
+      }
+      else if(j === 0) {
+        matrix[i][j] = i; //  [[0, 1, 2], [1], [2]];
+      }
+      else {
+        // 填写 xxxx
+
+        // 相同为 0  不同为 1
+        let cost = 0;
+        if (s1[i - 1] !== s2[j - 1]) {
+          cost = 1;
+        }
+
+        // 左上角顶点
+        const temp = matrix[i - 1][j - 1] + cost;
+        // 和上，下，左上角，取最小
+        matrix[i][j] = Math.min(temp, matrix[i - 1][j] + 1, matrix[i][j - 1] + 1)
+      }
+    }
+  }
+
+  return matrix[l1][l2];
+}
+```
 
 ## 2、个人简历
 
