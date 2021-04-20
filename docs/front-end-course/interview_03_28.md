@@ -24,9 +24,19 @@ const get = (data, path, defaultValue = void 0) => {
 
 ### 2、实现 add(1)(2)(3) 柯里化函数
 
-ref: [实现add(1)(2)(3)](https://ask.csdn.net/questions/2033011)
+参考资料：
 
-函数柯里化概念： 柯里化（Currying）是把接受多个参数的函数转变为接受一个单一参数的函数，并且返回接受余下的参数且返回结果的新函数的技术。
+1、[前端经典面试题解密-add(1)(2)(3)(4) == 10到底是个啥？](https://blog.csdn.net/chen801090/article/details/105602712/?utm_medium=distribute.wap_relevant.none-task-blog-baidujs_title-2)
+
+2、[js高阶函数应用—函数柯里化和反柯里化](https://www.cnblogs.com/johnhery/p/9805931.html)
+
+3、[js高阶函数应用—函数柯里化和反柯里化(二)](https://www.cnblogs.com/yifeng555/p/8901751.html)
+
+4、[函数的length属性](https://www.cnblogs.com/xuzhudong/p/8383597.html)
+
+函数柯里化概念： 柯里化（Currying）是把接受多个参数的函数转变为接受一个单一参数的函数，并且返回接受余下的参数且返回结果的新函数的技术。本题实现将add(1, 2, 3)函数柯里化，即add(1)(2)(3)
+
+length 是函数对象的一个属性值，指该函数有多少个必须要传入的参数，即形参的个数。形参的数量不包括剩余参数个数，仅包括第一个具有默认值之前的参数个数。与之对比的是，arguments.length 是函数被调用时实际传参的个数。
 
 ```js
 //粗暴版本
@@ -40,11 +50,21 @@ function add (a) {
 console.log(add(1)(2)(3)); // 6
 
 //参数长度固定
-const curry = (fn) =>
-(judge = (...args) =>
-    args.length === fn.length
-    ? fn(...args)
-    : (...arg) => judge(...args, ...arg));
+function curry(fn){
+    let len = fn.length 
+    let args = []
+    return function _c(...newArgs){
+        args = [...args, ...newArgs] //合并参数
+        if(args.length < len){
+            return _c
+        }else{
+            let res = fn.apply(this, args.slice(0, len))
+            args = [] //清空数组，防止下次调用时影响
+            return res
+        }
+    }
+}
+
 const add = (a, b, c) => a + b + c;
 const curryAdd = curry(add);
 console.log(curryAdd(1)(2)(3)); // 6
@@ -52,23 +72,23 @@ console.log(curryAdd(1, 2)(3)); // 6
 console.log(curryAdd(1)(2, 3)); // 6
 
 //参数长度不固定
-function add (...args) {
+function add(...args) {
     return args.reduce((a, b) => a + b)
 }
  
 function currying (fn) {
     let args = []
-    return function temp (...newArgs) {
+    return function _c (...newArgs) {
         if (newArgs.length) {
             args = [
                 ...args,
                 ...newArgs
             ]
-            return temp
+            return _c
         } else {
-            let val = fn.apply(this, args)
+            let res = fn.apply(this, args)
             args = [] //保证再次调用时清空
-            return val
+            return res
         }
     }
 }
@@ -183,55 +203,74 @@ t.then(r => {
 
 ### 6、 最短编辑距离算法问题
 
+参考资料：[经典动态规划问题：最短编辑距离算法的原理及实现](https://www.jianshu.com/p/12e9b9a9a350)
+
 给出两个单词word1和word2，计算出将word1 转换为word2的最少操作次数，你总共三种操作方法：插入一个字符、删除一个字符、替换一个字符
 
-考察点：`Levenshtein Distance` 算法，react中使用场景
+考察点：`Levenshtein Distance` 算法，react中使用场景，多应用于模糊匹配
 
 ```js
-/**
- *  [
- *    [0, 1, 2],
- *    [1, x, x],
- *    [2, x, x]
- *  ]
- * */
+const str1 = 'study'
+const str2 = 'stduy1'
 
-// bai  -  bay  => 1
-const levenshtein = (s1, s2) => {
-  let l1 = s1.length;
-  let l2 = s2.length;
-  
-  const matrix = [];
-
-  for (let i = 0; i <= l1; i++) {
-    matrix[i] = []; // [[], []]
-
-    for (let j = 0; j <= l2; j++) {
-      if (i === 0) {
-        matrix[i][j] = [j]; // [[0, 1, 2]]
-      }
-      else if(j === 0) {
-        matrix[i][j] = i; //  [[0, 1, 2], [1], [2]];
-      }
-      else {
-        // 填写 xxxx
-
-        // 相同为 0  不同为 1
-        let cost = 0;
-        if (s1[i - 1] !== s2[j - 1]) {
-          cost = 1;
+/*
+     0 s t u d y
+   0 0 1 2 3 4 5
+   s 1
+   t 2
+   u
+   d
+   y
+*/
+//暴力解法： 空间复杂度o(n^2), 时间复杂度o(n^2)
+function levenshtein1(str1, str2) {
+    let len1 = str1.length
+    let len2 = str2.length
+    let ary = Array.from(new Array(len2 + 1), () => new Array(len1 + 1))
+    //let ary = []
+    for (let i = 0; i <= len1; i++) {
+        //ary[i] = []
+        for (let j = 0; j <= len2; j++) {
+            if (i == 0) {
+                ary[i][j] = j
+            } else if (j == 0) {
+                ary[i][j] = i
+            } else {
+                ary[i][j] = Math.min(
+                    ary[i - 1][j] + 1, 
+                    ary[i][j - 1] + 1, 
+                    str1[i] === str2[j] ? ary[i - 1][j - 1] : ary[i - 1][j - 1] + 1)
+            }
         }
-
-        // 左上角顶点
-        const temp = matrix[i - 1][j - 1] + cost;
-        // 和上，下，左上角，取最小
-        matrix[i][j] = Math.min(temp, matrix[i - 1][j] + 1, matrix[i][j - 1] + 1)
-      }
     }
-  }
-
-  return matrix[l1][l2];
+    return ary[len1][len2]
 }
+
+//滚动数组：空间复杂度o(n*2), 时间复杂度o(n^2)
+function levenshtein2(str1, str2) {
+    let len1 = str1.length
+    let len2 = str2.length
+    let ary = new Array(len1 + 1)
+    for(let i=0; i<=len1; i++){
+        ary[i] = i
+    }
+    let aryT = [].concat(ary)
+    for(let j=1; j<=len2; j++){
+        ary[0] = j;
+        for (let i=1; i<=len1; i++){
+            ary[i] = Math.min(
+                ary[i-1] + 1,
+                aryT[i] + 1,
+                str1[i] === str2[j] ? aryT[i-1] : aryT[i-1] + 1
+            )
+        }
+        aryT = [].concat(ary)
+    }
+    return ary[len1]
+}
+
+console.log(levenshtein1(str1, str2))
+console.log(levenshtein2(str1, str2))
 ```
 
 ## 2、个人简历
