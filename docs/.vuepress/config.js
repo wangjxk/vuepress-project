@@ -34,7 +34,10 @@ module.exports = {
               { text: 'Promise规范和应用', link: '/front-end-course/course_04_03' },
               { text: '模块化整体规范', link: '/front-end-course/course_04_04' },
               { text: '浏览器对象详解', link: '/front-end-course/course_04_11' },
-              { text: 'ts初探', link: '/front-end-course/course_04_12' }
+              { text: 'ts初探', link: '/front-end-course/course_04_12' },
+              { text: '前端工程化详解', link: '/front-end-course/course_04_17' },
+              { text: '面向对象编程', link: '/front-end-course/course_04_18' },
+              { text: 'ES6ESNext规范详解', link: '/front-end-course/course_04_24' }
             ]
           },
           { 

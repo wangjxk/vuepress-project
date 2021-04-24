@@ -151,6 +151,15 @@ e.preventDefault()：可以阻止事件的默认行为发生，默认行为是�
 
 1、页面为ul + li结构，点击每个li alert对应的索引
 
+解析：浏览器获取元素方法
+
+* document.getElementById()
+
+* document.getElementsByTagName()
+
+* document.querySelector()    //css选择符的模式匹配DOM元素，返回单个元素
+* document.querySelectorAll() //返回nodeList列表
+
 ```js
 <!DOCTYPE html>
 <html>
@@ -183,7 +192,7 @@ ul.addEventListener('click', function (e) {
      const target = e.target;
  　　 if (target.tagName.toLowerCase() === "li") {
  　　　　const liList = this.querySelectorAll("li");
- 　　　　index = Array.prototype.indexOf.call(liList, target);
+ 　　　　index = Array.prototype.indexOf.call(liList, target)； //数组和字符串位置函数indexOf
  　　　　alert(`内容为${target.innerHTML}, 索引为${index}`);
  　　}
 })
@@ -240,10 +249,24 @@ function preventDefault(event) {
 }
 ```
 
-## 3、ajax 及fetch API 详解
+## 3、网络请求
 
-* XMLHTTPRequest
-* fetch
+### 1、XMLHTTPRequest对象
+
+* 方法
+  * open（请求方法：“get/post”, 请求url,   是否异步（默认true））
+  * send（请求体发送数据，无则传入null）
+  * abort()：收到响应之前取消异步请求
+  * setRequestHeader('MyHeader', 'MyValue')
+  * getResponseHeader('MyHeader')|getAllResponseHeader()
+* 属性
+  * responseText
+  * responseXML
+  * status（响应HTTP状态）
+  * statusText（响应HTTP状态描述）
+  * readyState（响应状态，请求/响应过程的哪个阶段）：0未初始化|1已打开|2已发送|3接收中|4完成，从一个值变为一个值，会触发readystatechange事件，readystatechange事件处理程序应该在调用open()之前赋值
+  * timeout超时时间，对应超时事件ontimeout
+  * 进度事件：loadstart、progress事件：接收数据时反复触发、error、abort、load、loadend
 
 ```js
 let xhr = new XMLHttpRequest();
@@ -263,18 +286,40 @@ xhr.onreadystatechange = function () {
     }
 };
 
-// xhr.timeout = 3000; // 3 seconds
-// xhr.ontimeout = () => console.log('timeout', xhr.responseURL);
+xhr.timeout = 3000; // 3 seconds
+xhr.ontimeout = () => console.log('timeout', xhr.responseURL);
 
 // progress事件可以报告长时间运行的文件上传
-// xhr.upload.onprogress = p => {
-//     console.log(Math.round((p.loaded / p.total) * 100) + '%');
-// }
+xhr.upload.onprogress = p => {
+     console.log(Math.round((p.loaded / p.total) * 100) + '%');
+}
 
 // start request
-xhr.send();
+xhr.send(null);
+```
 
+### 2、fetch
 
+* 方法：fetch(url，{}init对象)，返回Promise对象，只支持异步
+
+* 响应通过response对象获取：fetch().then((response)=>{}).catch(()=>{})，response对象混入了body，提供了5个方法，将ReadableStream转存到缓冲区的内存里，将缓冲区转换为js对象，通过Promise返回。
+
+  * response.text() //转为text
+
+  * response.json() //转为json
+
+  * response.formData()
+
+  * response.arrayBuffer()
+
+  * response.blob()
+
+* 默认不带cookie 
+* 错误不会reject 
+* 不支持超时设置 
+* 需要借用AbortController终止fetch   
+
+```js
 fetch(
         'http://domain/service', {
             method: 'GET'
@@ -285,7 +330,7 @@ fetch(
     .catch(error => console.error('error:', error));
 
 // 默认不带cookie
-
+//credentials：omit不发送cookie（默认）|same-origin同源发送cookie|include都发送cookie
 fetch(
     'http://domain/service', {
         method: 'GET',
@@ -296,7 +341,6 @@ fetch(
 // 错误不会reject
 // HTTP错误（例如404 Page Not Found 或 500 Internal Server Error）不会导致Fetch返回的Promise标记为reject；.catch()也不会被执行。
 // 想要精确的判断 fetch是否成功，需要包含 promise resolved 的情况，此时再判断 response.ok是不是为 true
-
 fetch(
         'http://domain/service', {
             method: 'GET'
@@ -322,8 +366,9 @@ function fetchTimeout(url, init, timeout = 3000) {
 }
 
 // 中止fetch
-const controller = new AbortController();
-
+// signal用于支持AbortController中断请求
+const controller = new AbortController(); 
+//AbortController接口表示一个控制器对象，允许你根据需要中止一个或多个 Web请求。
 fetch(
         'http://domain/service', {
             method: 'GET',
@@ -332,6 +377,117 @@ fetch(
     .then(response => response.json())
     .then(json => console.log(json))
     .catch(error => console.error('Error:', error));
-
 controller.abort();
 ```
+
+### 3、HTTP状态码和首部
+
+#### 1、HTTP状态码
+
+100信息性|200成功|300重定向|400客户端错误|500服务器错误
+
+- 200 get 成功 
+
+- 201 post 成功 
+
+- 301 永久重定向 
+
+- 302 临时重定向 
+
+- 304 协商缓存 服务器文件未修改 
+
+- 400 客户端请求有语法错误，不能被服务器识别 
+
+- 403 服务器受到请求，但是拒绝提供服务，可能是跨域 
+
+- 404 请求的资源不存在 
+
+- 405 请求的method不允许 
+
+- 500 服务器发生不可预期的错误 
+
+#### 2、HTTP首部
+
+* 通用首部：Connection、Date、MIME-Version、Cache-Control
+* 请求首部：User-Agent、Accept（MIME类型）、Accept-Encoding、Cookie
+* 响应首部：Set-Cookie
+* 实体首部：Content-Length、Content-Type、ETag、Expires、Last-Modified
+
+### 4、封装Ajax请求
+
+```tsx
+interface IOptions {
+    url: string;
+    type?: string;
+    data: any;
+    timeout?: number;
+}
+
+function formatUrl(json) {
+    let dataArr = [];
+    json.t = Math.random();
+    for (let key in json) {
+        dataArr.push(`${key}=${encodeURIComponent(json[key])}`)
+    }
+    return dataArr.join('&');
+}
+
+export function ajax(options: IOptions) {
+    return new Promise((resolve, reject) => {
+        if (!options.url) return;
+
+        options.type = options.type || 'GET';
+        options.data = options.data || {};
+        options.timeout = options.timeout || 10000;
+    
+        let dataToUrlstr = formatUrl(options.data);
+        let timer;
+    
+        // 1.创建
+        let xhr;
+        if ((window as any).XMLHttpRequest) {
+            xhr = new XMLHttpRequest();
+        } else {
+            xhr = new ActiveXObject('Microsoft.XMLHTTP');
+        }
+    
+        if (options.type.toUpperCase() === 'GET') {
+            // 2.连接
+            xhr.open('get', `${options.url}?${dataToUrlstr}`, true);
+            // 3.发送
+            xhr.send();
+        } else if (options.type.toUpperCase() === 'POST') {
+            // 2.连接
+            xhr.open('post', options.url, true);
+            xhr.setRequestHeader('ContentType', 'application/x-www-form-urlencoded');
+            // 3.发送
+            xhr.send(options.data);
+        }
+    
+        // 4.接收
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4) {
+                clearTimeout(timer);
+                if (xhr.status >= 200 && xhr.status < 300 || xhr.status === 304) {
+                    resolve(xhr.responseText);
+                } else {
+                    reject(xhr.status);
+                }
+            }
+        }
+    
+        if (options.timeout) {
+            timer = setTimeout(() => {
+                xhr.abort();
+                reject('超时');
+            }, options.timeout)
+        }
+
+        // xhr.timeout = options.timeout;
+        // xhr.ontimeout = () => {
+        //     reject('超时');
+        // }
+    });
+}
+```
+
