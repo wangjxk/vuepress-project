@@ -8,13 +8,15 @@
 //_.get(object, path, [defaultValue])
 // 根据 object对象的path路径获取值。 如果解析 value 是 undefined 会以 defaultValue 取代。
 // 以免直接使用a[0].c时因a[0]为undefind造成undefind.c报错
+// 使用方法：let a = {b:{c:'name'}}
+// get(a, 'b[c]', 5)
 const get = (data, path, defaultValue = void 0) => {
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.');
   // paths => ['a', '3', 'b'];
   let result = data;
   for (const path of paths) {
     result = Object(data)[path];  // edge case data -> null 
-    if (result == null) {
+    if (result == null || result == undefined) {
       return defaultValue;
     }
   }

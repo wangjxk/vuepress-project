@@ -120,6 +120,8 @@ window.screen.deviceXDPI/deviceYDPI 屏幕实际的水平DPI、垂直DPI
 
 捕获->目标->冒泡
 
+<img src="/img/event.jpg">
+
 ### 1、第三个参数
 
 ```js
@@ -314,9 +316,10 @@ xhr.send(null);
 
   * response.blob()
 
-* 默认不带cookie 
-* 错误不会reject 
-* 不支持超时设置 
+* 错误不会reject
+
+* 不支持超时设置
+
 * 需要借用AbortController终止fetch   
 
 ```js
@@ -329,8 +332,7 @@ fetch(
     .then(json => console.log(json))
     .catch(error => console.error('error:', error));
 
-// 默认不带cookie
-//credentials：omit不发送cookie（默认）|same-origin同源发送cookie|include都发送cookie
+//credentials：omit不发送cookie|same-origin同源发送cookie（默认）|include都发送cookie
 fetch(
     'http://domain/service', {
         method: 'GET',
@@ -409,8 +411,11 @@ controller.abort();
 #### 2、HTTP首部
 
 * 通用首部：Connection、Date、MIME-Version、Cache-Control
+
 * 请求首部：User-Agent、Accept（MIME类型）、Accept-Encoding、Cookie
+
 * 响应首部：Set-Cookie
+
 * 实体首部：Content-Length、Content-Type、ETag、Expires、Last-Modified
 
 ### 4、封装Ajax请求
