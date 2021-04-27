@@ -152,3 +152,81 @@ console.log(Player.prototype.__proto__.__proto__ === null) //true
 ```
 
 <img src="/img/prototype.png">
+
+### 3、new关键字解析
+
+* 创建一个新对象
+* 这个新对象内部的[[prototype]]特性被赋值为构造函数的prototype属性
+* 构造函数内部的this指向这个新对象
+* 执行构造函数内部的代码
+* 如果构造函数返回非空对象，则返回该对象，否则返回刚创建的对象 
+
+面试题目手写new函数：
+
+```js
+// 1. 用new Object() 的方式新建了一个对象 obj
+// 2. 取出第一个参数，就是我们要传入的构造函数。此外因为 shift 会修改原数组，所以 arguments 会被去除第一个参数
+// 3. 将 obj 的原型指向构造函数，这样 obj 就可以访问到构造函数原型中的属性
+// 4. 使用 apply，改变构造函数 this 的指向到新建的对象，这样 obj 就可以访问到构造函数中的属性
+// 5. 返回 obj
+function objectFatory(){
+    let obj = new Object()
+    let Constructor = [].prototype.shift(arguments)
+    obj.__prototype__ = Constructor.prototype
+    let res = Constructor.apply(obj, arguments)
+    return typeof res === 'object' : res : obj
+}
+//解析：
+//栈方法：后进先出LIFO    push()末尾添加元素，pop()末尾取出元素
+//队列方法：先进先出LILO	  push()末尾添加元素，shift()开头取出元素，
+//                      unshift()开头添加元素,pop()末尾取出元素
+```
+
+### 4、原型链
+
+当读取实例的属性时，如果找不到，就会查找与对象关联的原型中的属性，如果还查不到，就去找原型的原型，一直找到最顶层为止。这样一条通过[[prototype]]和 prototype 去连接的对象的链条，就是原型链。
+
+```js
+function Player() {}
+
+Player.prototype.name = "Kevin";
+
+var p1 = new Player();
+
+p1.name = "Daisy";
+// 查找p1对象中的name属性，因为上面添加了name，所以会输出“Daisy”
+console.log(p1.name); // Daisy
+
+delete p1.name;
+// 删除了p1.name，然后查找p1发现没有name属性，就会从p1的原型p1.proto中去找，也就是Player.prototype，然后找到了name，输出"Kevin"
+console.log(p1.name); // Kevin
+```
+
+那如果我们在 Player.prototype 中也找不到 name 属性呢,那么就会去 Player.prototype.[[prototype]]中去寻找，也就是{}。
+
+```js
+Object.prototype.name = "root";
+
+function Player() {}
+
+Player.prototype.name = "Kevin";
+
+var p1 = new Player();
+
+p1.name = "Daisy";
+// 查找p1对象中的name属性，因为上面添加了name，所以会输出“Daisy”
+console.log(p1.name); // Daisy
+
+delete p1.name;
+// 删除了p1.name，然后查找p1发现没有name属性，就会从p1的原型p1.__proto__中去找，也就是Player.prototype，然后找到了name，输出"Kevin"
+console.log(p1.name); // Kevin
+
+delete Player.prototype.name;
+
+console.log(p1.name);
+```
+
+## 4、继承
+
+
+
