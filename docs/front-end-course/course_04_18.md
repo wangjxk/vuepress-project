@@ -228,5 +228,299 @@ console.log(p1.name);
 
 ## 4、继承
 
+### 1、原型链继承
 
+#### 1、实现
+
+* 原理：通过原型继承多个引用类型的属性和方法。
+
+* 构造函数、原型和实例的关系：每个构造函数都有一个原型对象，原型有一个属性指回构造函数，而实例有一个指针指向原型。原型对象是另一个类型的实例时，原实例即可继承该实例的属性和方法。
+
+```js
+//父对象构造函数
+function Parent() {
+  this.name = "parentName";
+}
+//父对象原型对象
+Parent.prototype.getName = function () {
+  console.log(this.name);
+};
+
+//子对象构造函数
+function Child() {}
+//子对象原型对象指向父对象实例，完成继承
+Child.prototype = new Parent();
+//子对象构造函数更新为自身
+Child.prototype.constructor = Child;
+
+//测试
+var child1 = new Child();
+child1.getName(); // parentName
+
+// 1、解析：Child.prototype = new Parent();
+// Parent的实例同时包含实例属性方法和原型属性方法，所以把new Parent()赋值给Child.prototype。
+// 如果仅仅Child.prototype = Parent.prototype，那么Child只能调用getName，无法调用.name
+// 当Child.prototype = new Parent()后， 如果new Child()得到一个实例对象child，那么
+// child.__proto__ === Child.prototype;
+// Child.prototype.__proto__ === Parent.prototype
+// 也就意味着在访问child对象的属性时，如果在child上找不到，就会去Child.prototype去找，如果还找不到，就会去Parent.prototype中去找，从而实现了继承。
+
+// 2、解析：Child.prototype.constructor = Child;
+// 因为constructor属性是包含在prototype里的，上面重新赋值了prototype，所以会导致Child的constructor指向[Function: Parent]，有的时候使用child1.constructor判断类型的时候就会出问题
+// 为了保证类型正确，我们需要将Child.prototype.constructor 指向他原本的构造函数Child
+```
+
+#### 2、隐含的问题
+
+* 如果有属性是引用类型的，一旦某个实例修改了这个属性，所有实例都会受到影响。
+
+* 创建子对象Child 实例的时候，不能传参
+
+```js
+function Parent() {
+  this.actions = ["eat", "run"];
+}
+function Child() {}
+
+Child.prototype = new Parent();
+Child.prototype.constructor = Child;
+
+const child1 = new Child();
+const child2 = new Child();
+
+child1.actions.pop();
+//所有实例受影响，因都使用原型链属性，此时原型链属性被修改
+console.log(child1.actions); // ['eat']
+console.log(child2.actions); // ['eat']
+```
+
+### 2、构造函数继承
+
+#### 1、实现
+
+盗用构造函数技巧：在子类构造函数中调用父类构造函数，使用apply和call方法以新创建的对象为上下文执行构造函数。
+
+* 属性公用问题解决：执行子类的构造函数时，相当于运行了父类构造函数的所有初始化代码，结果是子类的每个实例都会有自己的属性。
+* 传递参数：可以在子类构造函数中向父类构造函数传参。
+
+```js
+function Parent() {
+  this.actions = ["eat", "run"];
+  this.name = "parentName";
+}
+
+function Child() {
+  Parent.call(this); //子类构造函数调用父类构造函数
+}
+
+const child1 = new Child();
+const child2 = new Child();
+
+child1.actions.pop();
+
+console.log(child1.actions); // ['eat']
+console.log(child1.actions); // ['eat', 'run']
+```
+
+```js
+function Parent() {
+  this.actions = ["eat", "run"];
+  this.name = "parentName";
+}
+
+function Child(id, name, actions) {
+  Parent.call(this, name); // 如果想直接传多个参数, 可以Parent.apply(this, Array.from(arguments).slice(1));
+  this.id = id;
+}
+
+const child1 = new Child(1, "c1", ["eat"]);
+const child2 = new Child(2, "c2", ["sing", "jump", "rap"]);
+
+console.log(child1.name); // { actions: [ 'eat' ], name: 'c1', id: 1 }
+console.log(child2.name); // { actions: [ 'sing', 'jump', 'rap' ], name: 'c2', id: 2 }
+```
+
+#### 2、隐含的问题
+
+* 属性或者方法想被继承的话，只能在构造函数中定义。
+* 方法在构造函数内定义了，那么每次创建实例都会创建一遍方法，多占一块内存。
+
+```js
+function Parent(name, actions) {
+  this.actions = actions;
+  this.name = name;
+  this.eat = function () {
+    console.log(`${name} - eat`);
+  };
+}
+
+function Child(id) {
+  Parent.apply(this, Array.prototype.slice.call(arguments, 1));
+  this.id = id;
+}
+
+const child1 = new Child(1, "c1", ["eat"]);
+const child2 = new Child(2, "c2", ["sing", "jump", "rap"]);
+
+console.log(child1.eat === child2.eat); // false
+```
+
+### 3、组合继承
+
+#### 1、实现
+
+综合了原型链继承和构造函数继承，基本思路：使用原型链继承原型上的属性和方法，通过构造函数继承继承实例属性。这些既可以把方法定义在原型上以实现重用，又可以让每个实例都有自己的属性。
+
+```js
+function Parent(name, actions) {
+  this.name = name;
+  this.actions = actions;
+}
+
+Parent.prototype.eat = function () {
+  console.log(`${this.name} - eat`);
+};
+
+//使用构造函数继承实例属性
+function Child(id) {
+  Parent.apply(this, Array.from(arguments).slice(1)); 
+  this.id = id;
+}
+//使用原型链继承继承原型上的属性和方法
+Child.prototype = new Parent();
+Child.prototype.constructor = Child;
+
+const child1 = new Child(1, "c1", ["hahahahahhah"]);
+const child2 = new Child(2, "c2", ["xixixixixixx"]);
+
+child1.eat(); // c1 - eat
+child2.eat(); // c2 - eat
+console.log(child1.name === child2.name); // false
+console.log(child1.eat === child2.eat);   // true
+```
+
+#### 2、隐含的问题
+
+调用了两次构造函数，做了重复的操作，一次是在创建子类原型时调用，另一次是在子类构造函数中调用
+
+* Parent.apply(this, Array.from(arguments).slice(1));
+
+* Child.prototype = new Parent();
+
+### 4、寄生组合式继承
+
+组合继承的优化，通过 Child.prototype 间接访问到 Parent.prototype，减少一次构造函数执行。
+
+
+
+```js
+function Parent(name, actions) {
+  this.name = name;
+  this.actions = actions;
+}
+
+Parent.prototype.eat = function () {
+  console.log(`${this.name} - eat`);
+};
+
+function Child(id) {
+  Parent.apply(this, Array.from(arguments).slice(1));
+  this.id = id;
+}
+
+// 模拟Object.create的效果
+let TempFunction = function () {};
+TempFunction.prototype = Parent.prototype;
+Child.prototype = new TempFunction();
+Child.prototype.constructor = Child;
+//封装写法
+function inheritPrototype(child, parent){
+    let prototype = Object.create(parent.prototype)//object(parent.prototype)
+    prototype.constructor = child
+    child.prototype = prototype
+}
+inheritPrototype(Child, Parent)
+
+const child1 = new Child(1, "c1", ["hahahahahhah"]);
+const child2 = new Child(2, "c2", ["xixixixixixx"]);
+```
+
+为什么一定要通过桥梁的方式让 Child.prototype 访问到 Parent.prototype？
+直接 Child.prototype = Parent.prototype 不行吗？
+答：不行！！在给 Child.prototype 添加新的属性或者方法后，Parent.prototype 也会随之改变。
+
+```js
+function Parent(name, actions) {
+  this.name = name;
+  this.actions = actions;
+}
+
+Parent.prototype.eat = function () {
+  console.log(`${this.name} - eat`);
+};
+
+function Child(id) {
+  Parent.apply(this, Array.from(arguments).slice(1));
+  this.id = id;
+}
+
+Child.prototype = Parent.prototype;
+
+Child.prototype.constructor = Child;
+
+console.log(Parent.prototype); // Child { eat: [Function], childEat: [Function] }
+
+Child.prototype.childEat = function () {
+  console.log(`childEat - ${this.name}`);
+};
+
+const child1 = new Child(1, "c1", ["hahahahahhah"]);
+
+console.log(Parent.prototype); // Child { eat: [Function], childEat: [Function] }
+```
+
+### 5、class类继承
+
+* 两种定义方式
+  * 类申明：class Person{}
+  * 类表达式：const Person = class{}
+
+* 构成
+  * 构造函数方法：类构造函数与普通构造函数的主要区别是，调用类的构造函数必须使用new操作符，而普通函数如果不使用new调用，那么就会以全局this（通常是window）作为内部对象。
+  * 实例方法
+  * 获取函数、设置函数
+  * 静态类方法
+
+```js
+class Parent {
+    name_= null
+    constructor() {
+        this.name = 'aaa';
+    }
+    getName() {
+        return this.name
+    }
+    static get(){
+        return 'good'
+    }
+    //支持获取和设置访问器
+    //使用get和set关键字对某个属性设置存值函数和取值函数，拦截该函数的存取行为
+    set name(value){
+        this.name_ = value
+    }
+    get name(){
+        return this.name_
+    }
+}
+Parent.get() //good
+//通过类继承
+class Child extends Parent {
+    constructor() {
+        super();
+    }
+}
+const p1 = new Child();
+p1.getName();
+
+```
 
