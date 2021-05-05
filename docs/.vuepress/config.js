@@ -28,16 +28,21 @@ module.exports = {
           {
             text: '前端进阶',
             items: [
-              { text: '面试1', link: '/front-end-course/interview_02_28' },
-              { text: '面试2', link: '/front-end-course/interview_03_14' },
+              { text: '面试1', link: '/front-end-course/interview_02_28_事件循环' },
+              { text: '面试2', link: '/front-end-course/interview_03_14_性能优化' },
               { text: '面试3', link: '/front-end-course/interview_03_28' },
-              { text: 'Promise规范和应用', link: '/front-end-course/course_04_03' },
-              { text: '模块化整体规范', link: '/front-end-course/course_04_04' },
-              { text: '浏览器对象详解', link: '/front-end-course/course_04_11' },
-              { text: 'ts初探', link: '/front-end-course/course_04_12' },
-              { text: '前端工程化详解', link: '/front-end-course/course_04_17' },
-              { text: '面向对象编程', link: '/front-end-course/course_04_18' },
-              { text: 'ES6ESNext规范详解', link: '/front-end-course/course_04_24' }
+              { text: 'Promise规范和应用', link: '/front-end-course/course_04_03_promise' },
+              { text: '模块化整体规范', link: '/front-end-course/course_04_04_模块化规范' },
+              { text: '浏览器对象详解', link: '/front-end-course/course_04_11_浏览器' },
+              { text: 'ts初探', link: '/front-end-course/course_04_12_typescript' },
+              { text: '前端工程化详解', link: '/front-end-course/course_04_17_工程化' },
+              { text: '面向对象编程', link: '/front-end-course/course_04_18_oop' },
+              { text: 'ES6ESNext规范详解', link: '/front-end-course/course_04_24_ES6规范' },
+              { text: 'ES6实战', link: '/front-end-course/course_05_01_es6实战' },
+              { text: 'this指针作用域', link: '/front-end-course/course_05_02_this作用域' },
+              { text: 'vue基础', link: '/front-end-course/course_05_03_vue' },
+              { text: 'vue-cli', link: '/front-end-course/course_05_05_vue-cli' },
+
             ]
           },
           { 
