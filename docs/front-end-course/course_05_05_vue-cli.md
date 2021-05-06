@@ -40,7 +40,7 @@ cli使用的常用工具库：
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Wang Jian",
+  "author": "Jian",
   "license": "ISC",
   "dependencies": {
     "chalk": "^4.1.1",
@@ -51,12 +51,72 @@ cli使用的常用工具库：
 }
 
 //index.js
+#!/usr/bin/env node
+const path = require("path")
+const childProcess = require("child_process")
+const chalk = require("chalk")
+const {program} = require("commander")
+const inquirer = require("inquirer")
+const CLI = require('clui'), Spinner = CLI.Spinner;
 
+
+program.arguments('<dir>') //<>必输、[]选输
+    .description('input a creat path')
+    .action((dir)=>{
+        console.log(chalk.blue("your input dir is: ", dir))
+        return inquirer
+        .prompt([
+          /* Pass your questions in here */
+            {
+                type: 'list',
+                name: 'framework',
+                message: 'which framework do you like?',
+                default: 'vue',
+                choices: [
+                    'react',
+                    'vue'
+                ]
+            }
+        ])
+        .then(answers => {
+          // Use user feedback for... whatever!!
+          const fullDir = path.resolve(process.cwd(), dir)
+          let iCommand = 'npm install -g @vue/cli'
+          let cCommand = 'vue create ' + fullDir
+          if(answers.framework === 'react'){
+            iCommand = 'npm install -g create-react-app'
+            cCommand = 'create-react-app ' + fullDir
+          }
+          //install cli
+          const countdown = new Spinner('install...', ['⣾','⣽','⣻','⢿','⡿','⣟','⣯','⣷']);
+          console.log('install cli: ', chalk.blue(answers.framework))
+          console.log(chalk.blue(iCommand))
+          countdown.start()
+          childProcess.execSync(iCommand)
+          console.log('install end')
+          countdown.stop()
+          
+          //create project
+          console.log('create project: ', chalk.blue(answers.framework))
+          const countdown1 = new Spinner('create...', ['⣾','⣽','⣻','⢿','⡿','⣟','⣯','⣷']);
+          console.log('===> excute: ', chalk.blue(cCommand))
+          countdown1.start()
+          childProcess.exec(cCommand, ()=>{
+            countdown1.stop()
+            console.log('create end')
+          })
+        })
+        .catch(error => {
+          if(error.isTtyError) {
+            chalk.red('sorry, Prompt couldn\'t be rendered in the current environment')
+          } else {
+            chalk.red('sorry, the cli couldn\'t be run in the current environment')
+          }
+        });
+    })
+
+program.parse(process.argv)
 ```
-
-
-
-
 
 ## 3、vue-cli
 
