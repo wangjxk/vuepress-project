@@ -120,7 +120,7 @@ program.parse(process.argv)
 
 ## 3、vue-cli
 
-
+vue cli是一个基于vue.js进行快速开发的完整系统
 
 ## 4、vue-cli源码分析
 
