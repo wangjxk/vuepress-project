@@ -325,6 +325,10 @@ console.log(baz.a)  //3
 
 ### 2、执行上下文
 
+> 1、[一文说透执行上下文](https://juejin.cn/post/6890705692643196935)
+>
+> 2、[js深入之作用链](https://github.com/mqyqingfeng/Blog/issues/6)
+
 当函数执行时，会创建一个执行上下文的环境，分为创建和执行两个阶段：
 
 * 创建阶段：函数被调用未执行任何代码时，创建一个拥有3个属性的对象
@@ -402,7 +406,7 @@ function a(){
 a();
 ```
 
-<img src="/img/chain.jpeg">
+<img src="/img/chain.jpg">
 
 ### 4、作用域与作用域链
 
