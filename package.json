@@ -1,0 +1,16 @@
+{
+  "name": "vuepress-project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vuepress dev docs",
+    "build": "vuepress build docs",
+    "deploy": "bash deploy.sh",
+    "push": "bash push.sh"
+  },
+  "devDependencies": {
+    "@vuepress/plugin-back-to-top": "^1.8.1",
+    "vuepress": "^1.8.1"
+  }
+}
