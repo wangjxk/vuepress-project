@@ -379,6 +379,38 @@ all(promiseList){
         }
     })
 }
+<<<<<<< HEAD
+=======
+
+//返回所有promise的状态和结果
+allSettled(promiseList){
+  return new MPromise((resolve, reject)=>{
+    if(!Array.isArray(promiseList)){
+      return reject(new TypeError('arguments must be an array'))
+    }
+    let counter =0
+    const promiseNum = promiseList.length
+    const resolvedArray = []
+    for(let i=0; i<promiseNum; i++){
+      MPromise.resolve(promiseList[i]).then(value => {
+        resolvedArray[i] = {
+          status: 'fulfilled',
+          value
+        }
+      }).catch(reason =>{
+        resolvedArray[i] = {
+          status: 'rejected',
+          reason
+        }
+      }).finally(()=>{
+        if(counter++ == promiseNum){
+          resolve(resolvedArray)
+        }
+      })
+    }
+  })
+}
+>>>>>>> 0780ca05a9c287d148590c318a26fe1fde334864
 ```
 
 ### 4、测试

@@ -38,11 +38,18 @@ module.exports = {
               { text: '前端工程化详解', link: '/front-end-course/course_04_17_工程化' },
               { text: '面向对象编程', link: '/front-end-course/course_04_18_oop' },
               { text: 'ES6ESNext规范详解', link: '/front-end-course/course_04_24_ES6规范' },
+<<<<<<< HEAD
               { text: 'ES6实战', link: '/front-end-course/course_05_01_es6实战' },
               { text: 'this指针作用域', link: '/front-end-course/course_05_02_this作用域' },
               { text: 'vue基础', link: '/front-end-course/course_05_03_vue' },
               { text: 'vue-cli', link: '/front-end-course/course_05_05_vue-cli' },
 
+=======
+              { text: 'this指针作用域', link: '/front-end-course/course_05_02_this作用域' },
+              { text: 'vue基础', link: '/front-end-course/course_05_03_vue' },
+              { text: 'vue-cli', link: '/front-end-course/course_05_05_vue-cli' },
+              { text: 'vue-router', link: '/front-end-course/course_05_09_vue-router' },
+>>>>>>> 0780ca05a9c287d148590c318a26fe1fde334864
             ]
           },
           { 
