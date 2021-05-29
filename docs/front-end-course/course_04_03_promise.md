@@ -379,8 +379,6 @@ all(promiseList){
         }
     })
 }
-<<<<<<< HEAD
-=======
 
 //返回所有promise的状态和结果
 allSettled(promiseList){
@@ -410,7 +408,6 @@ allSettled(promiseList){
     }
   })
 }
->>>>>>> 0780ca05a9c287d148590c318a26fe1fde334864
 ```
 
 ### 4、测试

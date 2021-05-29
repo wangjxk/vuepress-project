@@ -4,11 +4,7 @@
 >
 > 1、[Vue Router官方文档](https://router.vuejs.org/zh/)
 >
-<<<<<<< HEAD
-> 2、[Vue Router总结资料](http://www.wangjxk.top/front-end/vue/#%E4%BA%94%E3%80%81vue-router)
-=======
 > 2、[Vue Router总结资料](/front-end/vue/)
->>>>>>> 0780ca05a9c287d148590c318a26fe1fde334864
 
 ## 1、路由发展简介
 
@@ -271,10 +267,6 @@ container.addEventListener('click', function(e){
 ### 2、路由守卫
 
 * 【组件】前一个组件的 beforRouteLeave
-<<<<<<< HEAD
-
-=======
->>>>>>> 0780ca05a9c287d148590c318a26fe1fde334864
 * 【全局】的 router.beforeEach
 * 【组件】如果是路由参数变化，触发 beforeRouteUpdate
 * 【配置文件】里, 下一个的 beforeEnter
