@@ -538,9 +538,123 @@ console.log(target.foo)//good
 babel是一个工具链，用于将es2015+版本的代码转换为向后兼容的js语法。提供了插件功能，一切功能都可以以插件来实现，方便使用和弃用。babel处理步骤：
 
 * 解析：接收代码并输出AST（抽象语法树）
-  * 词法分析：把字符串形式的代码转换为令牌（tokens）流
-  * 语法分析：把一个令牌流转换为AST
+  * 词法分析：把字符串形式的代码转换为令牌（tokens）流，令牌看作是一个扁平的语法片段数组
+  * 语法分析：把一个令牌流转换为AST，使用令牌中的信息把它们转换成一个 AST 的表述结构，这样更易于后续的操作
+* 转换：接收AST并对其遍历，在此过程中对节点进行添加、更新和移除等操作。这是Babel 或是其他编译器中最复杂的过程 同时也是插件将要介入工作的部分
+* 生成：把最终的AST转换成字符串形式的代码，同时创建源码映射（source maps）。代码生成过程：深度优先遍历整个 AST，然后构建可以表示转换后代码的字符串
 
-* 转换：接收AST并对其遍历，在此过程中对节点进行添加、更新和移除等操作。
-* 生成：把最终的AST转换成字符串形式的代码，同时创建源码映射（source maps）
+具体模块功能：
+
+* @babel/parser : 转化为 AST 抽象语法树； 
+
+* @babel/traverse 对 AST 节点进行递归遍历； 
+
+* @babel/types 对具体的 AST 节点进行进一修改； 
+
+* @babel/generator : AST抽象语法树生成为新的代码
+
+### 1、AST
+
+资料：[AST详解与运用](https://zhuanlan.zhihu.com/p/266697614)
+
+抽象语法树，每一层为一个结点，ast由单一节点或成百上千个节点组成，可以描述用于静态分析的程序语。Babel是通过Babylon([https://github.com/babel/babylon](https://link.zhihu.com/?target=https%3A//github.com/babel/babylon))实现的ast解析器。
+
+```js
+//type为节点类型
+//每一种类型的节点定义了一些附加属性来进一步描述该节点类型
+//Babel还为每个节点额外生成了一些属性，用于描述该节点在原始代码中的位置，比如如start、end
+{
+ type: "FunctionDeclaration", 
+ id: {...},
+ params: [...],
+ body: {...} }{
+ type: "Identifier",
+ name: ...
+}
+{
+ type: "BinaryExpression",
+ operator: ...,
+ left: {...},
+ right: {...} 
+}
+```
+
+```js
+function square(n) {
+ return n * n; 
+}
+//对应的ast生成，json格式
+{
+  "type": "Program",
+  "start": 0,
+  "end": 38,
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "start": 0,
+      "end": 38,
+      "id": {
+        "type": "Identifier",
+        "start": 9,
+        "end": 15,
+        "name": "square"
+      },
+      "expression": false,
+      "generator": false,
+      "async": false,
+      "params": [
+        {
+          "type": "Identifier",
+          "start": 16,
+          "end": 17,
+          "name": "n"
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "start": 19,
+        "end": 38,
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "start": 22,
+            "end": 35,
+            "argument": {
+              "type": "BinaryExpression",
+              "start": 29,
+              "end": 34,
+              "left": {
+                "type": "Identifier",
+                "start": 29,
+                "end": 30,
+                "name": "n"
+              },
+              "operator": "*",
+              "right": {
+                "type": "Identifier",
+                "start": 33,
+                "end": 34,
+                "name": "n"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "sourceType": "module"
+}
+```
+
+### 2、手写babel原理
+
+```js
+
+```
+
+### 3、插件添加及使用
+
+```js
+
+```
 

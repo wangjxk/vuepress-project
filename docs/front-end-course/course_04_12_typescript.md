@@ -1,12 +1,17 @@
 # TypeScript
 
-参考资料：[TypeScript入门教程](https://ts.xcatliu.com/)
+> 参考资料：
+>
+> 1、[TypeScript入门教程](https://ts.xcatliu.com/)
+>
+> 2、[深入理解TypeScript](https://jkchao.github.io/typescript-book-chinese/)
 
 ## 1、准备
 
-```s
+```js
 npm install -g typescript
-tsc hello.ts
+tsc hello.ts  //编译
+tsc //编译，默认配置tsconfig.json
 ```
 
 面试题：你觉得使用ts的好处是什么?
@@ -216,5 +221,158 @@ var s:a= {
     },
     age: 16
 }
+```
+
+## 3、实战
+
+### 1、装饰器decorator
+
+ES7的与类相关的新语法，通过添加@方法名对对象进行装饰包装，返回被包装的对象
+
+* 可装饰对象包括：类、属性、方法等。
+* 装饰类：当装饰的对象是类时，我们操作的就是这个类本身，即装饰器函数的第一个参数，就是所要装饰的目标类
+* 装饰属性和方法：对于类属性或方法的装饰本质是操作其描述符，理解成是 Object.defineProperty(obj, prop, descriptor)的语法糖，参数如下：
+  * target：装饰的属性所述的类的原型，不是实例后的类，如果装饰的是 Car 的某个属性，这个 target 的值就是 Car.prototype。
+  * name：装饰的属性名
+  * descriptor：属性的描述符对象
+
+* babel支持( --save-dev)：
+  * babel>=7.x: @babel/plugin-proposal-decorators
+  * bable<=6.x: babel-plugin-transform-decorators-legacy
+
+#### 1、类装饰器
+
+```ts
+@decorator
+class A {}
+// 等同于
+class A {}
+A = decorator(A) || A;
+
+
+//日志打印实例
+@log('hi')
+class MyClass { }
+
+function log(text) { // 这个 target 在这里就是 MyClass 这个类
+  return function(target) {
+    target.prototype.logger = () => `${text}，${target.name} 被调用`
+  }
+}
+
+const test = new MyClass()
+test.logger() // hello，MyClass 被调用
+```
+
+#### 2、属性装饰器
+
+* 计算时间的装饰器
+
+```js
+//decorator.ts
+//装饰属性和方法
+export function before(beforeFn: any){
+    return function(target: any, name: any, descriptor: any){
+        console.log('target:', target)
+        console.log('name:', name)
+        const oldValue = descriptor.value
+        descriptor.value = function(){
+            beforeFn.apply(this, arguments)
+            return oldValue.apply(this, arguments)
+        }
+        return descriptor
+    }
+}
+
+//装饰属性和方法
+export function after(afterFn: any){
+    return function(target: any, name: any, descriptor: any){
+        const oldValue = descriptor.value
+        descriptor.value = function(){
+            const res = oldValue.apply(this, arguments)
+            afterFn.apply(this, arguments)
+            return res
+        }
+        return descriptor
+    }
+}
+
+//计算时间函数，无参数
+export function measure(target: any, name: any, descriptor: any){
+    const oldValue = descriptor.value;
+    descriptor.value = function() {
+        const start = Date.now();
+        const ret =  oldValue.apply(this, arguments);
+        console.log(`${name}执行耗时 ${Date.now() - start}ms`);
+        return ret;
+    };
+    return descriptor;
+}
+
+//index.ts
+import {before, after, measure} from "./decorator"
+
+class MyClass{
+    @before(function(){console.log("begin")})
+    @after(function(){console.log("end")})
+    @measure
+    testDecorator(){
+        console.log("test decorator")
+    }
+}
+
+const obj = new MyClass()
+obj.testDecorator()
+
+//tsconfig.json
+{
+    "compilerOptions": {
+      "target": "es5",
+      "module": "commonjs",
+      "outDir": "./build",
+      "rootDir": "./src",
+      "importHelpers": true,
+      "strict": true,
+      "experimentalDecorators": true
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
+```
+
+* 缓存的装饰器
+
+```ts
+const cacheMap = new Map();
+
+export function EnableCache(target: any, name: string, descriptor: PropertyDescriptor) {
+    const val = descriptor.value;
+    descriptor.value = async function(...args: any) {
+        const cacheKey = name + JSON.stringify(args);
+        if (!cacheMap.get(cacheKey)) {
+            const cacheValue = Promise.resolve(val.apply(this, args)).catch((_) => cacheMap.set(cacheKey, null));
+            cacheMap.set(cacheKey, cacheValue);
+        }
+        return cacheMap.get(cacheKey);
+    };
+    return descriptor;
+}
+```
+
+### 2、routeHelper
+
+实现一个路由跳转，通过ts约束参数的routeHelper
+
+```ts
+
+```
+
+### 3、countdown基础类
+
+实现一个基于ts和事件模式的countdown基础类
+
+```ts
+
 ```
 
