@@ -1,79 +1,272 @@
-# VUE技术总结
+# VUE2.0基础
 
-## 一、实例
+> 参考资料：
+> 1. [VUE官网教程](https://cn.vuejs.org/v2/guide/index.html)
+> 2. [VUE官网API详解](https://cn.vuejs.org/v2/api/)
 
-### 1、实例概述
+vue 是一个响应式的前端视图层框架。
 
-``` js
-var vm = new Vue({
-	//绑定对象, 根实例使用
-	el: '#example', 
-	//组件名称，组件使用
-	name: 'myComponent',
-	
-	//生命周期钩子函数
-	beforeCreate：function(){},
-	created:function(){},
-	beforeMounted: function(){},
-	mounted:function(){},
-	beforeUpdate：function(){},
-	updated:function(){},
-	beforeDestory:function(){},
-	destoryed(){},
-	
-	//框架暴露属性和方法，带有前缀$，eg:vm.$data、vm.$watch
-	//根实例为数据对象
-  	data：｛
-    ｝，
-    //组件为函数
-    data：function(){
-    	return {}
-    }，
-    
-    //组件使用，父元素入参
-    props:[],
-    props:{},
-    
-    //组件使用，v-model重定义
-    model: {
-    }，
-    
-    //方法对象
-  	method：｛
-    ｝，
-    
-    //计算属性对象
-    computed：{
+* 响应式：编写模版代码时，仅需要关注数据的变化即可，数据变化 UI 即可随之变化 
+
+* 视图层：类似前段模板、只是UI层面的框架
+* 框架：framework框架（整个应用程序设计），library库（工具函数集合）
+
+## 一、引入
+
+1、直接引用vue.js，适合小型项目或部分使用vue
+
+* 引用全部vue.js，运行时编译及渲染
+* 引用部分vue.js，仅引入渲染部分
+
+```html
+<!-- 全部引用 -->
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+    <div id="app">
+        <p>Message is: {{message}}</p>
+    </div>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                message: 'hello world'
+            }
+        })
+    </script>
+</body>
+
+<!-- 部分引用，不再展示双括号再重新渲染 -->
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+    <div id="app"></div>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                message: 'hello world'
+            }，
+            render(createElement){
+                return createElement(
+                    'p',
+                    null,
+                    [createElement('Message is: ', this.message)]
+                )
+        	}
+        })
+    </script>
+</body>
+<!-- 解析
+createElement建立虚拟DOM即VNODE
+// @returns {VNode}
+createElement(
+  // {String | Object | Function}
+  // 一个 HTML 标签名、组件选项对象，或者
+  // resolve 了上述任何一种的一个 async 函数。必填项。
+  'div',
+
+  // {Object}
+  // 一个与模板中 attribute 对应的数据对象。可选。
+  {
+    // (详情见下一节)
+  },
+
+  // {String | Array}
+  // 子级虚拟节点 (VNodes)，由 `createElement()` 构建而成，
+  // 也可以使用字符串来生成“文本虚拟节点”。可选。
+  [
+    '先写一些文字',
+    createElement('h1', '一则头条'),
+    createElement(MyComponent, {
+      props: {
+        someProp: 'foobar'
+      }
+    })
+  ]
+)
+-->
+```
+
+2、使用vue-cli工程化启动整体vue项目
+
+## 二、选项
+
+### 1、数据选项
+
+#### 1、data
+
+```js
+{//根实例为数据对象，组件为函数返回对象
+  data: {}, //根实例
+  data: function(){
+    return {
+    }
+  }, //组件
+} 
+```
+
+#### 2、props
+
+* 传值方式
+
+```js
+//子组件：可为数组或对象
+props: ['title', 'likes', 'isPublished', 'commentIds', 'author']
+props: {
+  title: String,
+  likes: Number,
+  isPublished: Boolean,
+  commentIds: Array,
+  author: Object,
+  callback: Function,
+  contactsPromise: Promise // or any other constructor
+}
+
+//父组件
+<!-- 在 HTML 中是 kebab-case 的 -->
+<blog-post post-title="hello!"></blog-post>
+<!-- 单文件组件和字符串模板无限制 -->
+<blog-post postTitle="hello!"></blog-post>
+
+几种传值方式：
+<!-- 静态值 -->
+<blog-post title="My journey with Vue"></blog-post>
+<!-- 动态值，使用bind，包括：变量、对象、表达式、数字、布尔值、数组 -->
+<blog-post v-bind:title="post.title"></blog-post>
+<blog-post
+  v-bind:title="post.title + ' by ' + post.author.name"
+></blog-post>
+<blog-post v-bind:likes="42"></blog-post>
+<blog-post is-published></blog-post>  //无值等价为true
+<blog-post v-bind:is-published="false"></blog-post>
+<blog-post v-bind:comment-ids="[234, 266, 273]"></blog-post>
+<blog-post
+  v-bind:author="{
+    name: 'Veronica',
+    company: 'Veridian Dynamics'
+  }"
+></blog-post>
+```
+
+* 类型检测与验证
+
+```js
+Vue.component('my-component', {
+  props: {
+    // 基础的类型检查 (`null` 和 `undefined` 会通过任何类型验证)
+    propA: Number,
+    // 多个可能的类型
+    propB: [String, Number],
+    // 必填的字符串
+    propC: {
+      type: String,
+      required: true
     },
-    
-    //监听属性对象
-    watch：{
-    
+    // 带有默认值的数字
+    propD: {
+      type: Number,
+      default: 100
     },
-    
+    // 带有默认值的对象
+    propE: {
+      type: Object,
+      // 对象或数组默认值必须从一个工厂函数获取
+      default: function () {
+        return { message: 'hello' }
+      }
+    },
+    // 自定义验证函数
+    propF: {
+      validator: function (value) {
+        // 这个值必须匹配下列字符串中的一个
+        return ['success', 'warning', 'danger'].indexOf(value) !== -1
+      }
+    }
+  }
 })
 ```
 
-### 2、生命周期
+* 传值异常处理
 
-<img src="/img/vue-life.png" width="70%">
+```js
+# 替换/合并已有的 Attribute
+对于绝大多数 attribute 来说，从外部提供给组件的值会替换掉组件内部设置好的值。所以如果传入 type="text" 就会替换掉 type="date" 并把它破坏！庆幸的是，class 和 style attribute 会稍微智能一些，即两边的值会被合并起来。
 
-| vue2.0        | description                                                  |
-| ------------- | ------------------------------------------------------------ |
-| beforeCreate  | 组件实例刚被创建，组件属性计算之前，如data属性等，this.data、this.$el都是undefined |
-| created       | 组件实例创建完成，属性已绑定，但dom未生成，$el属性不存在undefined，this.data有值 |
-| beforeMount   | 模板编译/挂载之前，data、$el都有值，dom树显示的是{{message}}，虚拟dom |
-| mounted       | 模板编译/挂载之后，data、$el都有值，dom树显示正常节点        |
-| beforeUpdated | 组件更新之前                                                 |
-| updated       | 组件更新之后                                                 |
-| activated     | for  keep-alive，组件被激活时使用                            |
-| deactivated   | for  keep-alive，组件被移除时调用                            |
-| beforeDestory | 组件销毁前调用                                               |
-| destoryed     | 组件销毁后调用                                               |
+# 禁用Attribute继承，不会影响style和class 的绑定
+# 基础组件：inheritAttrs和$attrs配合使用
+# <base-input> 组件是一个完全透明的包裹器了，也就是说它可以完全像一个普通的 <input> 元素一样使用了：所有跟它相同的 attribute 和监听器都可以工作，不必再使用 .native 监听器。
 
-vue中内置的方法 属性和vue生命周期的运行顺序（methods、computed、data、watch、props)：props => methods =>data => computed => watch。
+Vue.component('base-input', {
+  inheritAttrs: false,
+  props: ['label', 'value'],
+  computed: {
+    inputListeners: function () {
+      var vm = this
+      // `Object.assign` 将所有的对象合并为一个新对象
+      return Object.assign({},
+        // 我们从父级添加所有的监听器
+        this.$listeners,
+        // 然后我们添加自定义监听器，
+        // 或覆写一些监听器的行为
+        {
+          // 这里确保组件配合 `v-model` 的工作
+          input: function (event) {
+            vm.$emit('input', event.target.value)
+          }
+        }
+      )
+    }
+  },
+  template: `
+    <label>
+      {{ label }}
+      <input
+        v-bind="$attrs"
+        v-bind:value="value"
+        v-on="inputListeners"
+      >
+    </label>
+  `
+})
+<base-input
+  v-model="username"
+  required
+  placeholder="Enter your username"
+></base-input>
 
-### 3、计算属性和监听属性
+/*
+解析：
+1、如果给组件传递的数据，组件不使用props接收，那么这些数据将作为组件的HTML元素的特性，这些特性绑定在组件的HTML根元素上。
+2、inheritAttrs: false的含义是不希望本组件的根元素继承父组件的attribute，同时父组件传过来的属性（没有被子组件的props接收的属性），也不会显示在子组件的dom元素上，但是在组件里可以通过其$attrs可以获取到没有使用的注册属性。
+3、$attrs、$listeners、$props
+$attrs：当前组件的属性，通俗的讲也就是在组件标签定义的一系列属性，如input的value，placeholder等，但是不包括在当前组件里面定义的props属性。
+$listeners：当前组件监听的事件，通俗的讲也就是在使用组件的时候在标签中定义的事件，如@input，以及一些自定义事件@tempFn等。
+$props：当前组件从父组件那里接收的参数，通俗的讲和$attr差不多，但是只包括在当前组件中定义了的props属性。
+4、.native修饰符：在一个组件的根元素上直接监听一个原生事件。
+*/
+```
+
+#### 3、propsData
+
+```js
+//只用于new创建的实例中，创建实例时传递props，方便测试
+var vm = new Comp({
+  propsData: {
+    msg: 'Hello'
+  }
+})
+```
+
+#### 4、methods｜computed｜watch
+
+1. computed:  { [key: string]: Function | { get: Function, set: Function } }
+
+2. watch:  { [key: string]: string | Function | Object | Array }
+
+3. methods:  { [key: string]: Function }
 
 * 计算属性：computed，同步操作不能含有异步
 
@@ -150,45 +343,99 @@ methods: {
   - 当需要数据在 **异步变化或者开销较大时** ，执行更新，使用watch会更好一些；而computed**不能进行异步操作**；
   - computed可以用 **缓存中拿数据** ，而watch是每次都要运行函数计算，不管变量的值是否发生变化，而computed在值没有发生变化时，可以直接读取上次的值。
 
-## 二、模板与渲染
+### 2、生命周期选项
+
+<img src="/img/vue-life.png" width="70%">
+
+``` js
+{
+  //生命周期钩子函数
+	beforeCreate：function(){},
+	created:function(){},
+	beforeMounted: function(){},
+	mounted:function(){},
+	beforeUpdate：function(){},
+	updated:function(){},
+	beforeDestory:function(){},
+	destoryed(){},
+ }
+```
+
+| vue2.0        | description（function）                                      |
+| ------------- | ------------------------------------------------------------ |
+| beforeCreate  | 组件实例刚被创建，组件属性计算之前，如data属性等，this.data、this.$el都是undefined |
+| created       | 组件实例创建完成，属性已绑定，但dom未生成，$el属性不存在undefined，this.data有值 |
+| beforeMount   | 模板编译/挂载之前，data、$el都有值，dom树显示的是{{message}}，虚拟dom |
+| mounted       | 模板编译/挂载之后，data、$el都有值，dom树显示正常节点        |
+| beforeUpdated | 组件更新之前                                                 |
+| updated       | 组件更新之后                                                 |
+| activated     | for  keep-alive，组件被激活时使用                            |
+| deactivated   | for  keep-alive，组件被移除时调用                            |
+| beforeDestory | 组件销毁前调用                                               |
+| destoryed     | 组件销毁后调用                                               |
+
+vue中内置的方法 属性和vue生命周期的运行顺序（methods、computed、data、watch、props)：props => methods =>data => computed => watch。
+
+### 3、dom选项
+
+
+
+### 4、资源选项
+
+
+
+### 5、组合选项
+
+
+
+### 6、其他选项
+
+
+
+
+## 三、指令
+
+### 1、模版指令：v-text｜v-html|v-once
 
 使用基于html的模板语法，渲染成虚拟DOM结构，可使用JSX模板语法，也可直接使用render函数。
 
-### 1、模板插值
+* 文本：v-text
 
-* 文本
-
-``` js
+``` vue
 //“Mustache”语法 (双大括号) 的文本插值
 <span>Message: {{ msg }}</span>
+<span v-text="msg"></span>
 ```
-
-* 原始html：v-html指令
-
-* 属性绑定：v-bind指令
 
 * javascript表达式
 
-``` js
+``` vue
 {{ number + 1 }}
 {{ ok ? 'YES' : 'NO' }}
 {{ message.split('').reverse().join('') }}
 <div v-bind:id="'list-' + id"></div>
 ```
 
-### 2、渲染render
+* v-html：内容按普通html插入，不会作为模版进行编译
 
+```vue
+<p>Using mustaches: {{ rawHtml }}</p>
+<p>Using v-html directive: <span v-html="rawHtml"></span></p>
+```
 
+* v-once：一次插值，不变化
 
-## 三、指令
+```
+<span v-once>这个将不会改变: {{ msg }}</span>
+```
 
-### 1、条件指令：v-if和v-show
+### 2、条件指令：v-if｜v-else｜v-else-if｜v-show
 
 v-if、v-else、v-else-if：条件渲染，用key管理组件复用，v-for优先级高于v-if。
 
 v-show：改变display（disabled）
 
-### 2、列表指令：v-for
+### 3、循环指令：v-for
 
 * 数组： items = [];
 
@@ -346,87 +593,25 @@ Vue.config.keyCodes.f1 = 112
 <div @click.left="mouseClick"></div>
 ```
 
-### 4、表单指令：v-model
+### 4、表单指令：v-model｜v-bind
+1. v-bind，简写”：“，单向数据绑定
 
-表单元素创建双向绑定数据流：select、input、textarea，本质为语法糖
-
-`v-model` 在内部为不同的输入元素使用不同的 property 并抛出不同的事件：
-
-- text 和 textarea 元素使用 `value` property 和 `input` 事件；
-
-- checkbox 和 radio 使用 `checked` property 和 `change` 事件；
-
-- select 字段将 `value` 作为 prop 并将 `change` 作为事件。
-
-``` html
-<!-- 单行文本：input，使用value属性 -->
-<input v-model="message" placeholder="edit me">
-<p>Message is: {{ message }}</p>
-
-<!-- 多行文本：textarea，使用value属性 -->
-<span>Multiline message is:</span>
-<p style="white-space: pre-line;">{{ message }}</p>
-<textarea v-model="message" placeholder="add multiple lines"></textarea>
-
-<!-- 选择框：checkbox，使用checked属性，checked返回true和false -->
-<input type="checkbox" id="checkbox" v-model="checked">
-<label for="checkbox">{{ checked }}</label>
-
-<!-- 选择框：redio，多选使用value属性，picked返回value值-->
-<div id="example-4">
-  <input type="radio" id="one" value="One" v-model="picked">
-  <label for="one">One</label>
-  <input type="radio" id="two" value="Two" v-model="picked">
-  <label for="two">Two</label>
-  <span>Picked: {{ picked }}</span>
-</div>
-```
-
-修饰符: lazy、.number、.trim
-
-``` html
-<!-- 在“change”时而非“input”时更新，input事件转为change事件 -->
-<input v-model.lazy="msg">
-
-<!-- 将用户的输入值转为数值类型 -->
-<input v-model.number="age" type="number">
-
-<!-- 去除首位空白符 -->
-<input v-model.trim="msg">
-```
-
-### 5、模板指令：v-once、v-html、v-bind（：）
-
-* v-once：一次插值，不变化
-
-```
-<span v-once>这个将不会改变: {{ msg }}</span>
-```
-
-* v-html：输出真正的html，否则为字符串输出
-
-```
-<p>Using mustaches: {{ rawHtml }}</p>
-<p>Using v-html directive: <span v-html="rawHtml"></span></p>
-```
-
-
-* v-bind，简写”：“，数据绑定
-
-```
-//固定参数
+```vue
+<!-- 固定参数 -->
 <a v-bind:href="url">...</a>
 
+<!--
 //动态参数
 //约定1：输出字符串，异常为null，null也用于移除绑定
 //约定2：动态参数表达式有语法约定，空格和引号放在 HTML attribute名里是无效的，可使用计算属性替代
 //约定3：在DOM中使用模板时 (直接在一个HTML文件里撰写模板)，还需要避免使用大写字符来命名键名，因为浏览器会把attribute名全部强制转为小写
+-->
 <a v-bind:[attributeName]="url"> ... </a>
 ```
 
 * class和style增强：使用v-bind，添加了对象和数组支持
 
-```
+```vue
 //class绑定
 <!-- 对象语法 -->
 <div class="static" v-bind:class="{ active: isActive, 'text-danger': hasError }"></div>
@@ -479,6 +664,66 @@ data: {
 //多重值给定，只会渲染数组中最后一个被浏览器支持的值
 <div :style="{ display: ['-webkit-box', '-ms-flexbox', 'flex'] }"></div>
 ```
+
+2. v-model：双向数据绑定，表单元素创建双向绑定数据流：select、input、textarea，本质为语法糖
+
+`v-model` 在内部为不同的输入元素使用不同的 property 并抛出不同的事件：
+
+- text 和 textarea 元素使用 `value` property 和 `input` 事件；
+
+- checkbox 和 radio 使用 `checked` property 和 `change` 事件；
+
+- select 字段将 `value` 作为 prop 并将 `change` 作为事件。
+
+``` html
+<!-- 单行文本：input，使用value属性 -->
+<input v-model="message" placeholder="edit me">
+<p>Message is: {{ message }}</p>
+
+<!-- 多行文本：textarea，使用value属性 -->
+<span>Multiline message is:</span>
+<p style="white-space: pre-line;">{{ message }}</p>
+<textarea v-model="message" placeholder="add multiple lines"></textarea>
+
+<!-- 选择框：checkbox，使用checked属性，checked返回true和false -->
+<input type="checkbox" id="checkbox" v-model="checked">
+<label for="checkbox">{{ checked }}</label>
+
+<!-- 选择框：redio，多选使用value属性，picked返回value值-->
+<div id="example-4">
+  <input type="radio" id="one" value="One" v-model="picked">
+  <label for="one">One</label>
+  <input type="radio" id="two" value="Two" v-model="picked">
+  <label for="two">Two</label>
+  <span>Picked: {{ picked }}</span>
+</div>
+```
+
+修饰符: lazy、.number、.trim
+
+``` html
+<!-- 在“change”时而非“input”时更新，input事件转为change事件 -->
+<input v-model.lazy="msg">
+
+<!-- 将用户的输入值转为数值类型 -->
+<input v-model.number="age" type="number">
+
+<!-- 去除首位空白符 -->
+<input v-model.trim="msg">
+```
+
+### 5、插槽指令：v-slot
+
+
+
+### 6、编译指令：v-pre｜v-cloak
+
+
+
+
+
+
+
 
 ## 四、组件
 
@@ -646,142 +891,6 @@ export default {  //输出为对象
 
 ### 3、prop数据传递
 
-* 传值方式
-
-```
-//子组件
-props: ['title', 'likes', 'isPublished', 'commentIds', 'author']
-props: {
-  title: String,
-  likes: Number,
-  isPublished: Boolean,
-  commentIds: Array,
-  author: Object,
-  callback: Function,
-  contactsPromise: Promise // or any other constructor
-}
-
-//父组件
-<!-- 在 HTML 中是 kebab-case 的 -->
-<blog-post post-title="hello!"></blog-post>
-<!-- 单文件组件和字符串模板无限制 -->
-<blog-post postTitle="hello!"></blog-post>
-
-几种传值方式：
-<!-- 静态值 -->
-<blog-post title="My journey with Vue"></blog-post>
-<!-- 动态值，使用bind，包括：变量、对象、表达式、数字、布尔值、数组 -->
-<blog-post v-bind:title="post.title"></blog-post>
-<blog-post
-  v-bind:title="post.title + ' by ' + post.author.name"
-></blog-post>
-<blog-post v-bind:likes="42"></blog-post>
-<blog-post is-published></blog-post>  //无值等价为true
-<blog-post v-bind:is-published="false"></blog-post>
-<blog-post v-bind:comment-ids="[234, 266, 273]"></blog-post>
-<blog-post
-  v-bind:author="{
-    name: 'Veronica',
-    company: 'Veridian Dynamics'
-  }"
-></blog-post>
-```
-
-* 类型检测与验证
-
-```
-Vue.component('my-component', {
-  props: {
-    // 基础的类型检查 (`null` 和 `undefined` 会通过任何类型验证)
-    propA: Number,
-    // 多个可能的类型
-    propB: [String, Number],
-    // 必填的字符串
-    propC: {
-      type: String,
-      required: true
-    },
-    // 带有默认值的数字
-    propD: {
-      type: Number,
-      default: 100
-    },
-    // 带有默认值的对象
-    propE: {
-      type: Object,
-      // 对象或数组默认值必须从一个工厂函数获取
-      default: function () {
-        return { message: 'hello' }
-      }
-    },
-    // 自定义验证函数
-    propF: {
-      validator: function (value) {
-        // 这个值必须匹配下列字符串中的一个
-        return ['success', 'warning', 'danger'].indexOf(value) !== -1
-      }
-    }
-  }
-})
-```
-
-* 传值异常处理
-
-```
-# 替换/合并已有的 Attribute
-对于绝大多数 attribute 来说，从外部提供给组件的值会替换掉组件内部设置好的值。所以如果传入 type="text" 就会替换掉 type="date" 并把它破坏！庆幸的是，class 和 style attribute 会稍微智能一些，即两边的值会被合并起来。
-
-# 禁用Attribute继承，不会影响style和class 的绑定
-# 基础组件：inheritAttrs和$attrs配合使用
-# <base-input> 组件是一个完全透明的包裹器了，也就是说它可以完全像一个普通的 <input> 元素一样使用了：所有跟它相同的 attribute 和监听器都可以工作，不必再使用 .native 监听器。
-
-Vue.component('base-input', {
-  inheritAttrs: false,
-  props: ['label', 'value'],
-  computed: {
-    inputListeners: function () {
-      var vm = this
-      // `Object.assign` 将所有的对象合并为一个新对象
-      return Object.assign({},
-        // 我们从父级添加所有的监听器
-        this.$listeners,
-        // 然后我们添加自定义监听器，
-        // 或覆写一些监听器的行为
-        {
-          // 这里确保组件配合 `v-model` 的工作
-          input: function (event) {
-            vm.$emit('input', event.target.value)
-          }
-        }
-      )
-    }
-  },
-  template: `
-    <label>
-      {{ label }}
-      <input
-        v-bind="$attrs"
-        v-bind:value="value"
-        v-on="inputListeners"
-      >
-    </label>
-  `
-})
-<base-input
-  v-model="username"
-  required
-  placeholder="Enter your username"
-></base-input>
-
-解析：
-1、如果给组件传递的数据，组件不使用props接收，那么这些数据将作为组件的HTML元素的特性，这些特性绑定在组件的HTML根元素上。
-2、inheritAttrs: false的含义是不希望本组件的根元素继承父组件的attribute，同时父组件传过来的属性（没有被子组件的props接收的属性），也不会显示在子组件的dom元素上，但是在组件里可以通过其$attrs可以获取到没有使用的注册属性。
-3、$attrs、$listeners、$props
-$attrs：当前组件的属性，通俗的讲也就是在组件标签定义的一系列属性，如input的value，placeholder等，但是不包括在当前组件里面定义的props属性。
-$listeners：当前组件监听的事件，通俗的讲也就是在使用组件的时候在标签中定义的事件，如@input，以及一些自定义事件@tempFn等。
-$props：当前组件从父组件那里接收的参数，通俗的讲和$attr差不多，但是只包括在当前组件中定义了的props属性。
-4、.native修饰符：在一个组件的根元素上直接监听一个原生事件。
-```
 
 * 数据双向绑定：.sync事件，update:myPropName模式触发更新
 
@@ -1073,7 +1182,6 @@ beforeRouteUpdate(to, from, next) {
   * 组件内守卫和异步路由组件被解析之后，导航被确认之前被调用
 * 后置守卫: afterEach(to, from)
   * 无next参数，不会改变导航，因为导航已被确认
-  
 #### 2、路由独享守卫
 * beforeEnter
 ```JavaScript
@@ -1104,7 +1212,6 @@ beforeRouteUpdate(to, from, next) {
 * beforeRouteUpdate(to, from, next)
   * 在当前路由改变，但是该组件被复用时调用
   * 举例来说，对于一个带有动态参数的路径 /foo/:id，在 /foo/1 和 /foo/2 之间跳转的时候，由于会渲染同样的 Foo 组件，因此组件实例会被复用。而这个钩子就会在这个情况下被调用。
-  
 ```javascript
   beforeRouteUpdate (to, from, next) {
     // just use `this`

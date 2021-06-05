@@ -75,8 +75,8 @@ package manager：bower(不常用)、npm、yarn
 并发和快，常用命令可参考官网：[yarn参考](https://yarnpkg.com/)，具体为：
 
 * 全部安装：yarn install
-* 添加：yarn add xx@xx ｜ yarn add xx --dev
-* 更新：yarn up  xx@xx
+* 添加：yarn add xx@xx ｜ yarn add xx --dev | yarn golbal add xx
+* 更新：yarn up xx@xx
 * 移除：yarn remove xx
 * 运行： yarn xx
 
