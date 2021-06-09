@@ -378,15 +378,210 @@ vue中内置的方法 属性和vue生命周期的运行顺序（methods、comput
 
 ### 3、dom选项
 
+#### 1、el
 
+* vue实例创建时有效，可以是css选择器或者是一个 HTMLElement 实例。
+
+* 在实例化时存在这个选项，实例将立即进入模版编译过程，否则，需要显式调用 `vm.$mount()` 手动开启编译。
+
+* 可通过vm.$el获取vue关联的实例
+
+```js
+new Vue({    
+  el:"#container",
+})
+
+new Vue({
+  render: h => h(App),
+}).$mount('#app')
+```
+
+#### 2、template
+
+* String类型，字符串模版，模版会替换挂载的元素。
+
+* 如果值以 `#` 开始，则它将被用作选择符，并使用匹配元素的 innerHTML 作为模板。常用的技巧是用 `<script type="x-template">` 包含模板。
+
+```vue
+<!-- heading组件定义 -->
+<script type="text/x-template" id="anchored-heading-template">
+  <h1 v-if="level === 1">
+    <slot></slot>
+  </h1>
+  <h2 v-else-if="level === 2">
+    <slot></slot>
+  </h2>
+</script>
+<script>
+Vue.component('heading', {
+  template: '#anchored-heading-template',
+  /* 
+  template: `
+    <div class="blog-post">
+      <h3>{{ post.title }}</h3>
+      <div v-html="post.content"></div>
+    </div>
+  `
+  */
+  props: {
+    level: {
+      type: Number,
+      required: true
+    }
+  }
+})
+</script>
+```
+
+#### 3、render
+
+* **类型**：`(createElement: () => VNode) => VNode`
+* 字符串模板的代替方案，该渲染函数接收一个 `createElement` 方法作为第一个参数用来创建 `VNode`。如果组件是一个函数组件，渲染函数还会接收一个额外的 `context` 参数，为没有实例的函数组件提供上下文信息。
+
+```js
+Vue.component('heading', {
+  render: function (createElement) {
+    return createElement(
+      'h' + this.level,   // 标签名称
+      this.$slots.default // 子节点数组
+    )
+  },
+  props: {
+    level: {
+      type: Number,
+      required: true
+    }
+  }
+})
+```
+
+#### 4、renderError
+
+- **类型**：`(createElement: () => VNode, error: Error) => VNode`
+- 只在开发环境使用，当 `render` 函数遭遇错误时，提供另外一种渲染输出。其错误将会作为第二个参数传递到 `renderError`。
+
+```js
+new Vue({
+  render (h) {
+    throw new Error('oops')
+  },
+  renderError (h, err) {
+    return h('pre', { style: { color: 'red' }}, err.stack)
+  }
+}).$mount('#app')
+```
 
 ### 4、资源选项
 
+#### 1、components
 
+包含vue实例可用组件的hash表，object对象，component: { heading, mycomponent}
+
+#### 2、 directives
+
+包含vue实例可用指令的哈希表
+
+#### 3、filters
+
+包含vue实例可用过滤器的哈希表
 
 ### 5、组合选项
 
+#### 1、parent
 
+指定已创建的实例之父实例，在两者之间建立父子关系。子实例可以用 `this.$parent` 访问父实例，子实例被推入父实例的 `$children` 数组中。
+
+#### 2、mixins
+
+接收一个混入对象的数组，Array<object>
+
+* 应用于抽离公共逻辑（逻辑相同，模版不同），缺点数据来源不明确
+* 全局混入与局部混入：全局会影响之后每个创建的vue实例，局部只组件内使用
+
+```js
+//全局混入
+Vue.mixin({
+  created: function(){}
+})
+
+//局部混入
+export default {
+ name: 'ElDialog',
+ mixins: [Popup, emitter, Migrating],
+}
+```
+
+* 合并策略
+
+  * 数据对象，在内部会进行递归合并，发生冲突时以组件数据优先
+
+  * 同名钩子函数将合并为一个数组，全部会执行，混入对象的钩子在自己钩子之前执行
+
+  * 值为对象的选项，例如 methods、components 和 directives，将被合并为同⼀个对象。两个对象键 
+
+    名冲突时，取组件对象的键值对。
+
+```js
+var mixin = {
+  data: function(){
+    return {
+      message: 'hello',
+      foo: 'abc'
+    }
+  }
+}
+
+new Vue({
+  mixins: [mixin],
+  data: function(){
+    return {
+      message: 'goodbye',
+      bar: 'def'
+    }
+  },
+  created: function(){
+    // {message: "goodbye", bar: "def", foo: "abc"}
+    console.log(this.$data) //
+  }
+})
+```
+
+#### 3、extends
+
+申明扩展了另一个组件 (可以是一个简单的选项对象或构造函数)，而无需使用 `Vue.extend`
+
+```js
+var CompA = { ... } // 在没有调用 `Vue.extend` 时候继承 CompA 
+var CompB = {  extends: CompA,  ... }
+```
+
+#### 4、provide/inject
+
+一个祖先组件向其所有子孙后代注入一个依赖，不论组件层次有多深，并在其上下游关系成立的时间里始终生效.`provide` 和 `inject` 绑定并不是可响应的
+
+* provide
+  * Object | () => Object
+* Inject
+  * Array<string> | { [key: string]: string | Symbol | Object }
+
+```js
+// 父级组件提供 'foo'
+var Provider = {
+  provide: {
+    foo: 'bar'
+  },
+  // ...
+}
+
+// 子组件注入 'foo'
+var Child = {
+  inject: ['foo'],
+  created () {
+    console.log(this.foo) // => "bar"
+  }
+  // ...
+}
+```
 
 ### 6、其他选项
 
@@ -714,16 +909,107 @@ data: {
 
 ### 5、插槽指令：v-slot
 
+* 默认插槽和具名插槽：缩写#
 
+```vue
+<!-- 子组件：base-layout -->
+<div class="container">
+  <header>
+    <slot name="header"></slot>
+  </header>
+  <main>
+    <slot></slot>
+  </main>
+  <footer>
+    <slot name="footer"></slot>
+  </footer>
+</div>
+
+<!-- 父组件使用base-layout -->
+<base-layout>
+  <!-- 需要使用 template 包裹 -->
+  <template v-slot:header>
+    <h1>Here might be a page title</h1>
+  </template>
+  
+	<!-- 默认插槽 -->
+  <!-- 等价于 <template v-slot:default> <template> 包裹 -->
+  <p>A paragraph for the main content.</p>
+  <p>And another one.</p>
+
+  <!-- 缩写#，动态插槽为 v-slot:[dynamicSlotName] -->
+  <template #footer>
+    <p>Here's some contact info</p>
+  </template>
+</base-layout>
+```
+
+* 作用域插槽
+
+父级作用域中，我们可以使用带值的 `v-slot` 来定义我们提供的插槽 prop 的名字，并使用prop访问子组件的数据。
+
+```vue
+<!-- 子组件current-user -->
+<span>
+  <slot>{{ user.lastName }}</slot>
+</span>
+
+<!-- 父组件使用: 放置在template上 -->
+<current-user>
+  <template v-slot:default="slotProps">
+    {{ slotProps.user.firstName }}
+  </template>
+</current-user>
+
+<!-- 只有默认插槽的缩写，直接放组件上，无需使用template -->
+<current-user v-slot="slotProps">
+  {{ slotProps.user.firstName }}
+</current-user>
+```
+
+* 废弃语法
+  * 具名插槽属性：slot
+  * 作用域插槽属性：slot-scope
 
 ### 6、编译指令：v-pre｜v-cloak
 
+* v-pre
 
+跳过这个元素和它的子元素的编译过程。可以用来显示原始 Mustache 标签。跳过大量没有指令的节点会加快编译。
 
+```js
+<span v-pre>{{ this will not be compiled }}</span>
+```
 
+* v-cloak
 
+这个指令保持在元素上直到关联实例结束编译。和 css 规则如`[v-cloak] { display: none }`一起用时，这个指令可以隐藏未编译的 Mustache 标签直到实例准备完毕。
 
+用法：可以使用 v-cloak 指令设置样式，这些样式会在 Vue 实例编译结束时，从绑定的 HTML 元素上被移除。当网络较慢，网页还在加载 Vue.js ，而导致 Vue 来不及渲染，这时页面就会显示出 Vue 源代码，使用v-cloak配合样式是解决屏幕闪动的好方法。
 
+```html
+<div id="app">
+  {{context}}
+</div>
+<script>
+  var app = new Vue({
+    el: '#app',
+    data: {
+      context:'屏幕会出现闪动'
+    }
+  });
+</script>
+
+<!-- 优化 -->
+<div id="app" v-cloak>
+  {{context}}
+</div>
+<style>
+  [v-cloak]{
+  		display: none;
+	}
+</style>
+```
 
 ## 四、组件
 
