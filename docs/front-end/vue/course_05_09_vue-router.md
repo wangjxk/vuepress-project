@@ -574,6 +574,23 @@ const router = new VueRouter({
 面试题：路由导航守卫和Vue实例生命周期钩子函数的执行顺序
 :::
 
+1. /news/1 -> /login
+   * 【组件守卫】beforRouteLeave
+   * 【全局守卫】beforeEach
+   * 【路由独享守卫】beforeEnter
+   * 【组件守卫】beforeRouteEnter(无法访问this，实例未创建)
+   * 【全局守卫】beforeResolve
+   * 【全局守卫】afterEach
+   * 【vue生命周期】beforeCreate、created、beforeMount
+   * 调用beforeRouteEnter守卫中传给next的回调函数，创建好的组件实例会作为回调函数的参数传入
+   * 【vue生命周期】mounted
+2. /news/1 -> /news/1(路由更新，组件相同)
+   * 【全局守卫】beforeEach
+   * 【组件守卫】beforeRouteUpdate
+   * 【全局守卫】beforeResolve
+   * 【全局守卫】afterEach
+   * 【vue生命周期】beforeUpdate、updated
+
 ### 8、路由元数据
 
 路由定义时可通过meta属性配置元数据，常用于路由鉴权
@@ -686,6 +703,4 @@ const obj = {
 const {href} = this.$router.resolve(obj);
 window.open(href, '_blank');
 ```
-
-3. 将vue-router选项扁平化处理(bfs\dfs)
 
