@@ -477,13 +477,42 @@ new Vue({
 
 包含vue实例可用组件的hash表，object对象，component: { heading, mycomponent}
 
-#### 2、 directives
+#### 2、directives
 
 包含vue实例可用指令的哈希表
 
 #### 3、filters
 
-包含vue实例可用过滤器的哈希表
+将原数据进行格式话，不改变原数据，应用于金额、时间格式化，过滤器内部无法使用this
+
+* 全局过滤器
+* 局部过滤器
+
+```html
+<script>
+//全局定义
+Vue.filter("timeFormat", function(val, formatter="YYYY:MM:DD")){
+    return moment(val).format(formatter)
+})
+//局部定义
+{
+  fiters:{
+    timeFormat(val, formatter) {
+ 				return moment(val).format(formatter)
+ 		}
+  }
+}
+</script>
+//使用
+<template>
+	<div>
+  		<!-- {{}}使用 -->
+			{{ timer | format }}   
+      <!-- 在v-bind中 -->
+      <div v-bind:id="rawId | format('YYYY:MM:DD')"></div>  
+ 	</div>
+</tempalte>
+```
 
 ### 5、组合选项
 
@@ -944,9 +973,7 @@ data: {
 </base-layout>
 ```
 
-* 作用域插槽
-
-父级作用域中，我们可以使用带值的 `v-slot` 来定义我们提供的插槽 prop 的名字，并使用prop访问子组件的数据。
+* 作用域插槽：组件内部将数据传递给插槽。父级作用域中，我们可以使用带值的 `v-slot` 来定义我们提供的插槽 prop 的名字，并使用prop访问子组件的数据
 
 ```vue
 <!-- 子组件current-user -->
@@ -965,6 +992,29 @@ data: {
 <current-user v-slot="slotProps">
   {{ slotProps.user.firstName }}
 </current-user>
+
+<!-- 默认插槽作⽤域与具名插槽作⽤域同时存在时，默认插槽不能简写，必须写成v-slot形式 -->
+<el-dialog>
+ 		<!-- 不能简写，直接使用div形势，作用域不明确 -->
+    <!-- 错误写法：
+			<div>这是弹窗内容</div>
+ 			<div>{{ contentInfo }}</div>
+    -->
+ 		<template v-slot:default="contentInfo">
+ 				<div>这是弹窗内容</div>
+ 				<div>{{ contentInfo }}</div>
+ 		</template>
+ 		<template v-slot:footer="footerSlotProps">
+ 				<div>footer</div>
+ 				<div>{{ footerSlotProps }}</div>
+ 		</template>
+</el-dialog>
+<!-- 子组件el-dialog  -->
+<div>
+ 		<div>弹窗</div>
+ 		<slot :contentInfo="contentInfo">默认内容</slot>
+ 		<slot name="footer" :footerInfo="footerInfo">默认footer</slot>
+</div>
 ```
 
 * 废弃语法
@@ -1214,308 +1264,86 @@ $emit：子组件通过事件流向父组件
 this.$emit('update:title', newTitle)
 ```
 
-## 五、vue-router
+## 五、响应式原理
 
-### 1、路由原理
+###  1、核心api
 
-核心是改变URL，不刷新页面，不向浏览器发送请求。
+* 通过Object.defineProperty将属性转换为getter/setter
 
-#### 1、hash路由
+* 收集依赖
 
-* url 的 hash 是以 # 开头，当 hash 改变时，页面不会因此刷新，浏览器也不会向服务器发送请求
+  * 每个组件实例对应⼀个watcher实例 
 
-* 特点：兼容性好、丑陋、对于后端路由来说不区分#号后面的内容
-* 更改hash及hashchange事件
+  * 在组件渲染过程中，把“touch”过的数据记录为依赖(触发getter -> 将当前watcher实例收集到属性对应的dep中) 
 
-```javascript
-//hash路由链接
-http://a.com/web#order
+* 触发更新
+  * 数据更新后 -> 会触发属性对应的setter -> 通过dep去通知watcher -> 关联的组件重新渲染
 
-//更改hash路由
-window.location.hash = '#/news' 
-window.location.replace('#/detial')
-// https://www.baidu.com  -> https://www.baidu.com/#news
-// 同时在浏览器生成一条记录，点击回退按钮会回到原url
+```vue
+<template>
+	<div>
+		 <div>{{ a }}</div>
+ 		 <div>{{ info.name }}</div>
+  </div>
+</template>
+<script>
+  export default App extends Vue{
+    data(){
+      return {
+        a: 'tes',
+        info: {
+          name: "xiaoming"
+        }
+      }
+    }
+  }
+</script>
 
-//监听hash路由，通过hashchange事件
-window.addEventListener('hashchange'，function () { 
-    console.log('render'); 
-});
-```
+<!-- 
+const dep1 = new Dep()
+Object.defineProperty(this.$data, 'a', {
+	get(){
+		dep1.depend() //收集依赖
+	  return value
+	},
+  set(newValue){
+		if(newValue === value) return
+    value = newValue
+    dep1.notify() //通知依赖
+	}
+})
 
-hash路由实现demo
+const dep2 = new Dep()
+Object.defineProperty(this.$data, 'info', {
+ ...
+})
 
-```html
-<html>
-    <head>
-        <meta charset="utf-8"></meta>
-        <script>
-            // 定义路由映射表 
-            var routerObj = { 
-                '#/list': '<div>列表页</div>', 
-                '#/detail': '<div>详情页</div>' 
-            }
-			function hashChange(){
-		document.getElementById('app').innerHTML = routerObj[location.hash] || '404页面'
-			}
-            // 监听hash路由变化
-            window.addEventListener('hashchange', hashChange)
-        </script>
-    </head>
-    <body onload="hashChange()">
-        <div>
-            <h1>hash 路由</h1> 
-            <a href="#/list">列表页</a> 
-            <a href="#/detail">详情页</a> 
-            <a href="#/other">404</a>
-        </div>
-        <div id="app" style="border: 1px solid black; min-height: 200px;"></div>
-    </body>
-</html>
-```
-
-#### 2、history路由
-
-* HTML5 规范中提供了 history.pushState 和 history.replaceState 来进行路由控制，通过这两个方法，可以实现改变 url 且不向服务器发送请求。
-* 特点：链接同正常链接，需要服务端配合，避免刷新404
-* 更改history路由方法
-  * 点击后退/前进 -> popstate 事件
-  * history.pushState history.replaceState -> 触发相应的函数后，在后面手动添加回调
-
-```html
-<html>
-    <head>
-        <meta charset="utf-8"></meta>
-        <script>
-            var routerHistoryObj = { 
-				'/web/list': '<div>history 列表页</div>', 
-				'/web/detail': '<div>history 详情页</div>' 
-			}
-			// 为每个链接添加点击事件 
-			var length = document.querySelectorAll('#history-box a[href]').length 
-			for(var i = 0; i < length; i++) { 
-				document.querySelectorAll('#history-box a[href]')[i].addEventListener('click', function(event) { 
-					event.preventDefault(); 
-					window.history.pushState({}, null, event.currentTarget.getAttribute('href') ); 
-					handleHref(); 
-				})
-			}
-			// 监听前进/后退 引起的posstate事件 
-			window.addEventListener('popstate', handleHref); 
-			// 根据新的路由，显示新的组件 
-			function handleHref () { 
-				document.getElementById('app').innerHTML = routerHistoryObj[location.pathname] || '404页面' 
-			}
-        </script>
-    </head>
-    <body onload="hashChange()">
-        <div>
-            <h1>hash 路由</h1> 
-            <a href="/web/list">列表页</a> 
-            <a href="/web/detail">详情页</a> 
-            <a href="/web/other">404</a>
-        </div>
-        <div id="app" style="border: 1px solid black; min-height: 200px;"></div>
-    </body>
-</html>
-
-<!--
-// nodejs路由处理 /web -> /web*
-app.get('/web*', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+const dep3 = new Dep()
+Object.defineProperty(this.$data.info, 'name', {
+ ...
 })
 -->
 ```
 
-### 2、vue-router使用
+### 2、注意事项
 
-#### 1、引入router
+#### 1、对象
 
-```javascript
-Vue.use(VueRouter)
-//1、引入了两个组件 router-link和router-view
-//2、全局混入了$route（获取属性）和$router（操作）
-```
+* vue无法检测对象的添加
+* 解决方案：this.$set(this.someObject, 'b', 2)
+* 注意：Vue不允许动态添加根级别的响应式property
 
-##### 1、router-link
+#### 2、数组
 
-* to 字符串 | Location对象
-  * 字符串，手动拼接的
-  * ｛name：'',  query:{},  params:{}｝
-  * ｛path：'',  query:{},  params:{}｝
+* Object.defineProperty无法监听数组索引值的变化，比如this.a[0] = 4
+  * 解决方案：this.$set(this.a, 0, 44) ｜this.a.splice(0, 1, 44)
+* 数组长度的变化无法检测
+  * 解决方案：this.a.splice(newLength)删除从newLength之后的数据
 
-- tag默认为a
-- repalce：设置 `replace` 属性的话，当点击时，会调用 `router.replace()` 而不是 `router.push()`，于是导航后不会留下 history 记录
-- 与手写a链接的区别，router-link抹平了两种模式下href的书写方式，会得到正确的href值；history模式下调用pushState并阻止默认行为。
+* 重写了数组的方法：push\pop\shift\unshift\splice\sort\reverse
 
-##### 2、router-view
+#### 3、其他
 
-* 确定路由组件显示的位置
-* 可以嵌套
-* 命名router-view
-
-```JavaScript
-<router-view class="view one"></router-view>
-<router-view class="view two" name="a"></router-view>
-<router-view class="view three" name="b"></router-view>
-const router = new VueRouter({
-  routes: [
-    {
-      path: '/',
-      components: {
-        default: Foo,
-        a: Bar,
-        b: Baz
-      }
-    }
-  ]
-})
-```
-
-##### 3、this.$route
-
-* params：路由参数对象
-* query：表示 URL 查询参数对象
-* matched：匹配的路由记录数组
-* path：当前路由的路径，绝对路径
-
-##### 4、this.$router
-
-* push(location) 
-
-  跳转到指定url路径，并向history栈中添加一个记录，点击后退会返回到上一个页面
-
-* replace(location) 
-
-  跳转到指定url路径，但是history栈中不会有记录，点击返回会跳转到上上个页面
-
-* go(n) 
-
-  向前或者向后跳转n个页面，n可为正整数或负整数
-
-* back() 
-
-* forward() 
-
-* resolve() 
-
-  解析目标位置，const {href} = this.$router.resolve(location) // 得到完整的url，可以window.open打开
-
-```javascript
-//demo
-// 0. 注册插件 Vue.use(VueRouter) 
-// 1. 定义 (路由) 组件。 
-// 可以从其他文件 import 进来 
-const Foo = { template: '<div>foo</div>' } 
-const Bar = { template: '<div>bar</div>' } 
-
-// 2. 定义路由 
-// 每个路由应该映射一个组件。 
-const routes = [ { path: '/foo', component: Foo }, { path: '/bar', component: Bar } ]
-
-// 3. 创建 router 实例，然后传 `routes` 配置 
-const router = new VueRouter({ routes // (缩写) 相当于 routes: routes })
-                              
-// 4. 创建和挂载根实例。 
-// 记得要通过 router 配置参数注入路由， 
-// 从而让整个应用都有路由功能 
-const app = new Vue({ router }).$mount('#app')
-```
-
-#### 2、命名路由
-
-* 可以直接通过名字跳转，后续如果更改了path，则不影响name的跳转 
-
-* 设置了默认的子路由，则子路由的name会被警告，通过name跳转子路由则不会显示默认的子路由
-
-#### 3、子路由
-
-* 默认子路由: path: '' 
-* 子路由中的path是否以'/'开头的区别，加'/'是绝对路径，不加是相对
-
-#### 4、动态匹配路由
-
-* params: /user/:username 
-* 响应路由参数变化：watch 、beforeRouteUpdate
-
-```javascript
-watch: { 
-    '$route.params.id'() { 
-        this.getNews() 
-    } 
-｝
-
-beforeRouteUpdate(to, from, next) { 
-    this.getNews(to.params.id) next() 
-},
-```
-
-#### 5、404路由
-
-```javascript
-// 含有通配符的路由应该放在最后
-{ path: '*', component: NotFound, }
-```
-
-### 3、导航守卫
-
-#### 1、全局守卫
-* 前置守卫: beforeEach(to, from, next)
-  * 必须调用next()才可继续
-  * next('/')  next({path: '/'}) 当前的导航被中断，然后进行一个新的导航。比如访问需要登录的页面，如果没有登录的话， 就跳转到登录页
-* 解析守卫: beforeResolve(to, from, next)
-  * 2.5.0新增
-  * 组件内守卫和异步路由组件被解析之后，导航被确认之前被调用
-* 后置守卫: afterEach(to, from)
-  * 无next参数，不会改变导航，因为导航已被确认
-#### 2、路由独享守卫
-* beforeEnter
-```JavaScript
-  const router = new VueRouter({
-    routes: [
-        {
-        path: '/foo',
-        component: Foo,
-        beforeEnter: (to, from, next) => {
-            // ...
-        }
-        }
-    ]
-  })
-```
-####  3、组件守卫
-* beforeRouteEnter(to, from, next)
-  * 在渲染该组件的对应路由被 confirm 前调用
-  * 不能访问this，组件实例还未被创建
-  * 可以给next传递一个回调访问this，也是唯一一个支持给next传递回调的守卫
-```javascript
-  beforeRouteEnter (to, from, next) {
-    next(vm => {
-        // 通过 `vm` 访问组件实例
-    })
-  }   
-```
-* beforeRouteUpdate(to, from, next)
-  * 在当前路由改变，但是该组件被复用时调用
-  * 举例来说，对于一个带有动态参数的路径 /foo/:id，在 /foo/1 和 /foo/2 之间跳转的时候，由于会渲染同样的 Foo 组件，因此组件实例会被复用。而这个钩子就会在这个情况下被调用。
-```javascript
-  beforeRouteUpdate (to, from, next) {
-    // just use `this`
-    this.name = to.params.name
-    next()
-  }
-```
-* beforeRouteLeave(to, from, next)
-  * 导航离开该组件的对应路由时调用
-  * 这个离开守卫通常用来禁止用户在还未保存修改前突然离开。该导航可以通过 next(false) 来取消。
-```javascript
-  beforeRouteLeave (to, from, next) {
-    const answer = window.confirm('您确定离开吗？还有未保存的更改')
-    if (answer) {
-        next()
-    } else {
-        next(false)
-    }
-  }
-```
+* 递归的循环data中的属性修改，可能导致性能问题
+* 对于一些数据获取后不更改，只用于展示，可以使用Object.freeze(data.city)优化性能
 
