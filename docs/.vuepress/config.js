@@ -17,18 +17,18 @@ module.exports = {
             items: [
               { text: 'js杂记', link: '/front-end/js/' },
               { text: 'Promise规范和应用', link: '/front-end/js/course_04_03_promise' },   
-              { text: '浏览器对象详解', link: '/front-end/js/course_04_11_浏览器' },
+              { text: '浏览器对象详解', link: '/front-end/js/course_04_11_browser' },
               { text: 'ts初探', link: '/front-end/js/course_04_12_typescript' }, 
               { text: '面向对象编程', link: '/front-end/js/course_04_18_oop' },
-              { text: 'ES6ESNext规范详解', link: '/front-end/js/course_04_24_ES6规范' },
-              { text: 'this指针作用域', link: '/front-end/js/course_05_02_this作用域' }
+              { text: 'ES6ESNext规范详解', link: '/front-end/js/course_04_24_ES6' },
+              { text: 'this指针作用域', link: '/front-end/js/course_05_02_this_chain' }
             ]
           },
           {
             text: '工程化',
             items: [
-              { text: '模块化整体规范', link: '/front-end/tools/course_04_04_模块化规范' },
-              { text: '前端工程化详解', link: '/front-end/tools/course_04_17_工程化' },
+              { text: '模块化整体规范', link: '/front-end/tools/course_04_04_module' },
+              { text: '前端工程化详解', link: '/front-end/tools/course_04_17_project' },
               { text: 'webpack', link: '/front-end/tools/webpack' },
               { text: '工具', link: '/front-end/tools/tools' },
               { text: 'babel', link: '/front-end/tools/babel' }
@@ -37,18 +37,18 @@ module.exports = {
           {
             text: 'vue',
             items: [
-              { text: 'vue基础', link: '/front-end/vue/course_05_03_vue' },
+              { text: 'vue框架基础', link: '/front-end/vue/index' }, 
               { text: 'vue-cli', link: '/front-end/vue/course_05_05_vue-cli' },
               { text: 'vue-router', link: '/front-end/vue/course_05_09_vue-router' },
-              { text: 'vue基础', link: '/front-end/vue/' }, 
+              { text: 'vue原理', link: '/front-end/vue/course_vue_interview_06_06' }
             ]
           },
           {
             text: '面试', 
             items:[
                 { text: '面试', link: '/front-end/interview/'},
-                { text: '面试1', link: '/front-end/interview/interview_02_28_事件循环' },
-                { text: '面试2', link: '/front-end/interview/interview_03_14_性能优化' },
+                { text: '面试1', link: '/front-end/interview/interview_02_28' },
+                { text: '面试2', link: '/front-end/interview/interview_03_14' },
                 { text: '面试3', link: '/front-end/interview/interview_03_28' }
               ]
           },

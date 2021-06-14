@@ -522,7 +522,7 @@ Vue.filter("timeFormat", function(val, formatter="YYYY:MM:DD")){
 
 #### 2、mixins
 
-接收一个混入对象的数组，Array<object>
+接收一个混入对象的数组，`Array<object>`
 
 * 应用于抽离公共逻辑（逻辑相同，模版不同），缺点数据来源不明确
 * 全局混入与局部混入：全局会影响之后每个创建的vue实例，局部只组件内使用
@@ -591,7 +591,7 @@ var CompB = {  extends: CompA,  ... }
 * provide
   * Object | () => Object
 * Inject
-  * Array<string> | { [key: string]: string | Symbol | Object }
+  * `Array<string> | { [key: string]: string | Symbol | Object }`
 
 ```js
 // 父级组件提供 'foo'
@@ -1252,7 +1252,7 @@ $emit：子组件通过事件流向父组件
 
 数据双向绑定，语法糖
 
-```
+```vue
 <!-- 传递数据：title -->
 父组件：
 <text-document
@@ -1264,86 +1264,4 @@ $emit：子组件通过事件流向父组件
 this.$emit('update:title', newTitle)
 ```
 
-## 五、响应式原理
-
-###  1、核心api
-
-* 通过Object.defineProperty将属性转换为getter/setter
-
-* 收集依赖
-
-  * 每个组件实例对应⼀个watcher实例 
-
-  * 在组件渲染过程中，把“touch”过的数据记录为依赖(触发getter -> 将当前watcher实例收集到属性对应的dep中) 
-
-* 触发更新
-  * 数据更新后 -> 会触发属性对应的setter -> 通过dep去通知watcher -> 关联的组件重新渲染
-
-```vue
-<template>
-	<div>
-		 <div>{{ a }}</div>
- 		 <div>{{ info.name }}</div>
-  </div>
-</template>
-<script>
-  export default App extends Vue{
-    data(){
-      return {
-        a: 'tes',
-        info: {
-          name: "xiaoming"
-        }
-      }
-    }
-  }
-</script>
-
-<!-- 
-const dep1 = new Dep()
-Object.defineProperty(this.$data, 'a', {
-	get(){
-		dep1.depend() //收集依赖
-	  return value
-	},
-  set(newValue){
-		if(newValue === value) return
-    value = newValue
-    dep1.notify() //通知依赖
-	}
-})
-
-const dep2 = new Dep()
-Object.defineProperty(this.$data, 'info', {
- ...
-})
-
-const dep3 = new Dep()
-Object.defineProperty(this.$data.info, 'name', {
- ...
-})
--->
-```
-
-### 2、注意事项
-
-#### 1、对象
-
-* vue无法检测对象的添加
-* 解决方案：this.$set(this.someObject, 'b', 2)
-* 注意：Vue不允许动态添加根级别的响应式property
-
-#### 2、数组
-
-* Object.defineProperty无法监听数组索引值的变化，比如this.a[0] = 4
-  * 解决方案：this.$set(this.a, 0, 44) ｜this.a.splice(0, 1, 44)
-* 数组长度的变化无法检测
-  * 解决方案：this.a.splice(newLength)删除从newLength之后的数据
-
-* 重写了数组的方法：push\pop\shift\unshift\splice\sort\reverse
-
-#### 3、其他
-
-* 递归的循环data中的属性修改，可能导致性能问题
-* 对于一些数据获取后不更改，只用于展示，可以使用Object.freeze(data.city)优化性能
 
