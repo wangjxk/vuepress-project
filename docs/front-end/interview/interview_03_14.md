@@ -544,6 +544,8 @@ console.log(caculator(testData))
 
 实现：JSONP 由两部分组成：**回调函数** 和 **数据**。回调函数是用来处理服务器端返回的数据，回调函数的名字一般是在请求中指定的。而数据就是我们需要获取的数据，也就是服务器端的数据。
 
+参考：[jsonp的原理及实现](https://www.jianshu.com/p/88bb82718517)
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -559,6 +561,7 @@ console.log(caculator(testData))
             script.src = "http://192.168.31.122/1.txt"; 
             //设置请求的链接以及处理返回数据的回调函数
             document.body.insertBefore(script, document.body.firstChild);
+            //服务器直接返回handleResponse(x, x),解析后直接调用
         }
     </script>
 </head>

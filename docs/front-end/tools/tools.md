@@ -16,6 +16,19 @@ git push -f git@github.com:wangjxk/wangjxk.github.io.git master
 git push -f git@github.com:wangjxk/vuepress-project.git master
 ```
 
+推送至github示例：
+
+```js
+第一步：在ginhub网站上创建一个repository；
+第二步：点击需要上传的本地工程目录，右击-->>Git Bash，进入命令行；
+第三步：$ git init        
+       $ git add --all        //添加该文件夹下的所有文件
+       $ git commit -m ‘xxx’   //引号内是对仓库的描述
+       $ git remote add origin git@github.com:xxx/yyy.git  //添加远程仓库路径（ssh路径或者http路径）
+       $ git push -u origin master
+       或者 $ git push -f git@github.com:xxx/yyy.git master
+```
+
 ## 2、npm
 
 > 参考资料：
