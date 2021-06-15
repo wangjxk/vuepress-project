@@ -96,7 +96,7 @@ console.log(array.includes(2));
 ｛
 	"presets": [
       ["@babel/preset-env",{
-  		 "targets": ">1.5%"，
+  		 		"targets": ">1.5%"，
           "useBuiltIns": "usage", //按需加载
           "corejs": 3 //指定corejs版本
  	  }]
@@ -105,6 +105,7 @@ console.log(array.includes(2));
 //index.js，去除import
 const array = [1, 2, 3];
 console.log(array.includes(2));
+
 //输出
 "use strict";
 require("core-js/modules/es.array.includes.js");

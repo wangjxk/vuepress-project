@@ -71,3 +71,14 @@ bin：模块有一个或者多个需要配置到PATH路径下的可执行模块�
 npx是一个工具，npm v5.2.0引入的一条命令（npx），一个npm包执行器，指在提高从npm注册表使用软件包时的体验 ，npm使得它非常容易地安装和管理托管在注册表上的依赖项，npx使得使用CLI工具和其他托管在注册表。
 
 当执行NPX xxx时候，先看xxx在$PATH里有没有，没有则查找当前目录node_modules里是否存在，若没有则安装并执行。
+
+## 4、yarn
+
+```
+* 全部安装：yarn install
+* 添加：yarn add xx@xx ｜ yarn add xx --dev | yarn golbal add xx
+* 更新：yarn up xx@xx
+* 移除：yarn remove xx
+* 运行： yarn xx
+```
+

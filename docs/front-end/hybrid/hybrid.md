@@ -19,7 +19,6 @@ JSContext *context = [webView valueForKeyPath:@"documentView.webView.mainFrame.j
 
 //andriod：使用addJavascriptInterface接口
 class getJsData { 
-  /* Android4.2之前addJavascriptInterface接口存在注入漏洞，升级后增加了JS只 能访问带有 @JavascriptInterface注解的Java函数的限制，在本地定义的提供给 JS调用的接口都需要增加@android.webkit.JavascriptInterface声明 */
 		@JavascriptInterface //标注的方法里面是子线程，而不是主线程 
     public String getNativeData() { 
       return "nativeData"; 
@@ -100,7 +99,7 @@ public void javaCallJS(){
 * andriod：JsBridge
 * andriod在启动webview时加载脚步，ios在webview发送scheme请求时加载脚步
 
-<img src="./img/jsbridge.png"/>
+<img src="/img/jsbridge.png"/>
 
 ```js
 //notation: js file can only use this kind of comments
