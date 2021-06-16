@@ -40,6 +40,8 @@ module.exports = {
               { text: 'vue框架基础', link: '/front-end/vue/index' }, 
               { text: 'vue-cli', link: '/front-end/vue/course_05_05_vue-cli' },
               { text: 'vue-router', link: '/front-end/vue/course_05_09_vue-router' },
+              { text: 'vuex', link: '/front-end/vue/course_vuex' },
+              { text: 'vue-ssr', link: '/front-end/vue/course_vue_ssr' },
               { text: 'vue原理', link: '/front-end/vue/course_vue_interview_06_06' }
             ]
           },
