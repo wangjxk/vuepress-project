@@ -382,3 +382,295 @@ export default {
 
 ## 4、源码解析
 
+### 1、思路
+
+* flux思想
+  * 问题：在开发中面临最多的场景是状态重复但是不集中，在不同的组件中依赖了同样的状态，重复就会导致不对等的风险。
+  * 思想：基于 `FLUX` 的思想，我们设计的状态管理将是中心化的工具，也就是集中式存储管理应用的所有组件的状态，将所有的状态放在一个全局的 `Tree` 结构中，集中放在一起的好处是可以有效避免重复的问题，也更好的管理，将状态和视图层解耦。
+  * 解决：使用全局的store对象管理状态和数据，单一状态树
+
+* 状态流转
+  * 单一流转
+  * 同步和异步分层：mutations负责同步状态管理、actions负责异步事件（内部通过mutations改变状态）
+
+* 与vue集成
+  * 通过插件将 `vue` 集成在一起，通过 `mixin` 将 `$store` 这样的快速访问 `store` 的快捷属性注入到每一个 `vue` 实例中
+* 响应式
+  * 利用vue的data响应式实现
+* 扩展
+  * 辅助函数
+  * 模块化
+  * 插件支持
+
+### 2、源码解析
+
+#### 1、store注册
+
+```js
+/**
+* store.js - store 注册
+*/
+let Vue
+
+// vue 插件必须要这个 install 函数
+export function install(_Vue) {
+  Vue = _Vue // 拿到 Vue 的构造器，存起来
+  Vue.mixin({ beforeCreate: vuexInit })
+  
+  function vuexInit () {
+    const options = this.$options //创建对象入参
+    // 这样就可以通过 this.$store 访问到 Vuex 实例，拿到 store 了
+    if (options.store) {
+      this.$store = typeof options.store === 'function'
+        ? options.store()
+        : options.store
+    } else if (options.parent && options.parent.$store) {
+      this.$store = options.parent.$store
+    }
+  }
+}
+```
+
+#### 2、store的响应式
+
+```js
+/**
+* store.js - 实现响应式
+*/
+export class Store {
+  constructor(options = {}) {
+    resetStoreVM(this, options.state)
+  }
+  
+  get state () {
+    return this._vm._data.$$state
+  }
+}
+
+function resetStoreVM(store, state) {
+  // 因为 vue 实例的 data 是响应式的，正好利用这一点，就可以实现 state 的响应式
+  store._vm = new Vue({
+    data: {
+      $$state: state
+    }
+  })
+}
+```
+
+#### 3、衍生数据
+
+```js
+/**
+* store.js - 衍生数据（getters）
+*/
+export class Store {
+  constructor(options = {}) {
+    
+    const state = options.state
+    
+    resetStoreVM(this, state)
+    
+    // 我们用 getters 来收集衍生数据 computed
+    this.getters = {}
+    
+    // 简单处理一下，衍生不就是计算一下嘛，传人 state
+    _.forEach(this.getters, (name, getterFn) => {
+      Object.defineProperty(this.getters, name, {
+        get: () => getterFn(this.state)
+      })
+    })
+  }
+  
+  get state () {
+    return this._vm._data.$$state
+  }
+}
+
+function resetStoreVM(store, state) {
+  store._vm = new Vue({
+    data: {
+      $$state: state
+    }
+  })
+}
+```
+
+#### 4、Actions/Mutations
+
+```js
+/**
+* store.js - Actions/Mutations 行为改变数据
+*/
+export class Store {
+  constructor(options = {}) {
+    
+    const state = options.state
+    
+    resetStoreVM(this, state)
+    
+    this.getters = {}
+    
+    _.forEach(options.getters, (name, getterFn) => {
+      Object.defineProperty(this.getters, name, {
+        get: () => getterFn(this.state)
+      })
+    })
+    
+    // 定义的行为，分别对应异步和同步行为处理
+    this.actions = {}
+    this.mutations = {}
+    
+    _.forEach(options.mutations, (name, mutation) => {
+      this.mutations[name] = payload => {
+        // 最终执行的就是 this._vm_data.$$state.xxx = xxx 这种操作
+        mutation(this.state, payload)
+      }
+    })
+    
+    _.forEach(options.actions, (name, action) => {
+      this.actions[name] = payload => {
+        // action 专注于处理异步，这里传入 this，这样就可以在异步里面通过 commit 触发 mutation 同步数据变化了
+        action(this, payload)
+      }
+    })
+  }
+  
+  // 触发 mutation 的方式固定是 commit
+  commit(type, payload) {
+    this.mutations[type](payload)
+  }
+  
+  // 触发 action 的方式固定是 dispatch
+  dispatch(type, payload) {
+    this.actions[type](payload)
+  }
+  
+  get state () {
+    return this._vm._data.$$state
+  }
+}
+
+function resetStoreVM(store, state) {
+  store._vm = new Vue({
+    data: {
+      $$state: state
+    }
+  })
+}
+```
+
+#### 5、分形，拆分出多个 Module
+
+```js
+// module 可以对状态模型进行分层，每个 module 又含有自己的 state、getters、actions 等
+
+// 定义一个 module 基类
+class Module {
+	constructor(rawModule) {
+    this.state = rawModule || {}
+    this._rawModule = rawModule
+    this._children = {}
+  }
+  
+  getChild (key) {
+    return this._children[key]
+  }
+  
+   addChild (key, module) {
+    this._children[key] = module
+  }
+}
+
+// module-collection.js 把 module 收集起来
+class ModuleCollection {
+  constructor(options = {}) {
+    this.register([], options)
+  }
+  
+  register(path, rawModule) {
+    const newModule = new Module(rawModule)
+    if (path.length === 0 ) {
+      // 如果是根模块 将这个模块挂在到根实例上
+      this.root = newModule
+    }
+    else {
+      const parent = path.slice(0, -1).reduce((module, key) => {
+        return module.getChild(key)
+      }, this.root)
+      
+      parent.addChild(path[path.length - 1], newModule)
+    }
+    
+    // 如果有 modules，开始递归注册一波
+    if (rawModule.modules) {
+      _.forEach(rawModule.modules, (key, rawChildModule) => {
+        this.register(path.concat(key), rawChildModule)
+      })
+    }
+  }
+}
+
+// store.js 中
+export class Store {
+  constructor(options = {}) {
+    // 其余代码...
+    
+    // 所有的 modules 注册进来
+    this._modules = new ModuleCollection(options)
+    
+    // 但是这些 modules 中的 actions, mutations, getters 都没有注册，所以我们原来的方法要重新写一下
+    // 递归的去注册一下就行了，这里抽离一个方法出来实现
+    installModule(this, this.state, [], this._modules.root);
+  }
+}
+
+function installModule(store, state, path, root) {
+  // getters
+  const getters = root._rawModule.getters
+  if (getters) {
+    _.forEach(getters, (name, getterFn) => {
+      Object.defineProperty(store.getters, name, {
+        get: () => getterFn(root.state)
+      })
+    })
+  }
+  
+  // mutations
+  const mutations = root._rawModule.mutations
+  if (mutations) {
+    _.forEach(mutations, (name, mutation) => {
+      let _mutations = store.mutations[name] || (store.mutations[name] = [])
+      _mutations.push(payload => {
+        mutation(root.state, payload)
+      })
+      
+      store.mutations[name] = _mutations
+    })
+  }
+  
+  // actions
+  const actions = root._rawModule.actions
+  if (actions) {
+    _.forEach(actions, (name, action) => {
+      let _actions = store.actions[name] || (store.actions[name] = [])
+      _actions.push(payload => {
+        action(store, payload)
+      })
+      
+      store.actions[name] = _actions
+    })
+  }
+  
+  // 递归
+  _.forEach(root._children, (name, childModule) => {
+    installModule(this, this.state, path.concat(name), childModule)
+  })
+}
+```
+
+#### 6、插件机制
+
+```js
+(options.plugins || []).forEach(plugin => plugin(this))
+```
+
