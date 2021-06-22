@@ -509,3 +509,476 @@ new webpack.HotModuleReplacementPlugin({
 });
 ```
 
+## 5、面试题
+
+### 1、webpack中的module
+
+module指模块化规范，webpack支持esmodule、commonjs、amd、assests（image，font，video，audio，json）
+
+1. esm
+
+* 关键字export，允许讲esm中内容暴露给其他模块，`export {bb}`
+
+* 关键字import，导入模块:`import {aa} from './a.js'`
+
+2. commonjs
+
+* module.exports，允许将commonjs中的内容暴露给其他模块
+* require，导入模块
+
+### 2、webpack modules如何表达自己的各种依赖
+
+* esm import语句
+* commonjs require引入语句
+* AMD define require
+* css/sass/less @import
+
+### 3、chunk和bundle的区别
+
+1. chunk
+
+chunk是webpack打包过程中modules的集合，是打包过程中的概念
+
+* webpack的打包是从一个入口模块开始，入口模块引用其他模块，其他模块引用其他模块
+
+* webpack通过引用关系逐个打包模块，这些module就形成了一个chunk。
+
+* 如果有多个入口模块，可能会产生多条打包路径，每条路径会形成一个chunk。
+
+2. bundle
+
+是我们最终输出的一个或者多个打包好的文件
+
+3. chunk和bundle的关系是什么
+
+* 大多数情况下，一个chunk会产生一个bundle，但是如果加sourcemap，一个entry，一个chunk对应两个bundle。
+
+* chunk是过程中的代码块，bundle是打包结果输出的代码块，chunk在构建完成就呈现为bundle。
+
+### 4、chunk产生判断
+
+```js
+//webpack.config.js
+/* 1个chunk，2个bundle(sourse-map) entry一个key */
+module.exports = {
+  mode: 'production',
+  entry: {
+    index: ['./src/index.js', './src/common.js']
+  },
+  output: {
+    filename: "[name].js"
+  },
+  devtool: "source-map"
+}
+
+/* 2个chunk，4个bundle entry两个key */
+module.exports = {
+  mode: 'production',
+  entry: {
+    index: './src/index.js', 
+    common: './src/common.js'
+  },
+  output: {
+    filename: "[name].js"
+  },
+  devtool: "source-map"
+}
+
+/* split chunk 文件分割 */
+/* 5个chunks，5个bundle文件 */
+module.exports = {
+  mode: 'production',
+  entry: {
+    index: './src/index.js', 
+    other: './src/multiply.js'
+  },
+  output: {
+    filename: "[name].js"
+  },
+  optimization: {
+    runtimeChunk: "single",
+    splitChunks:{
+      cacheGroups: {
+        commons: {
+          chunks: "initial",
+          minChunks: 2, //至少两个chunk使用
+          minSize: 0    //公用最小的值
+        },
+        vendor: {
+          test: /node_module/, //正则匹配
+          chunks: "initial",
+          name: "vendor",
+          enforce: true
+        }
+      }
+      
+		}
+  }
+}
+/* 解析：5个chunks产生
+1. entry index
+2. entry other
+3. runtimeChunk: "single", runtime指在浏览器运行时，webpack用来连接模块化的应用程序的所有代码。runtime包含在模块交互时，连接模块的加载和解析逻辑，包括浏览器中的已加载模块的连接，以及懒加载模块的执行逻辑。
+引入模块，导入模块的逻辑单独拆分为一个chunk
+4. splitChunk commons 公用chunk
+5. splitChunk vendor 第三方包打包，匹配路径node_module文件夹下
+*/
+```
+
+### 5、plugin和loader分别做什么？怎么工作？
+
+1. Loader
+
+模块转换器，将非js模块转换为webpack能识别的js模块。
+
+本质上，webpack loader将所有类型的文件，转换为应用程序的依赖图可以直接引用的模块。
+
+2. Plugin
+
+扩展插件，webpack运行各个阶段，都会广播出对应的事件，插件去监听事件
+
+3. Compiler
+
+对象，包含了webpack环境的所有配置信息，包括options、loader、plugins。
+
+webpack启动的时候实例化，它在全局中唯一，可以把它理解为webpack的实例。
+
+4. Compliation
+
+包含了当前的模块资源，编译生成的资源等。
+
+webpack在开发模式下运行的时候，每当检测到一个文件变化时，就会创建一次新的Compliation。
+
+### 6、webpack打包流程
+
+1. 初始化参数：shell、webpack.config.js
+2. 开始编译：初始化一个compiler对象，加载所有配置，开始执行编译
+3. 确定入口：根据entry中的配置，找出所有的入口文件
+4. 编译模块：从入口文件开始，调用所有的loader，再去递归的找依赖
+5. 完成模块的编译：得到每个模块被翻译后的最终内容以及他们之间的依赖关系（依赖图）
+6. 输出资源：根据得到的依赖关系，组装成一个个包含多个module的chunk
+7. 输出完成：根据配置，确定要输出的文件名以及文件路径
+
+## 6、webpack简单实现
+
+官方定义：webpack是一个现代js应用程序的静态模块打包器。当webpack处理应用程序时，它会递归的构建一个依赖图，其中包含应用程序所需的每个模块，然后将所有这些模块打包成一个或多个bundle。
+
+1. 找到一个入口文件
+2. 解析这个入口文件，提起他的依赖
+
+3. 解析入口文件依赖的依赖，递归的去创建一个依赖图，描述所有文件的依赖关系
+4. 把所有文件打包成一个文件
+
+**代码步骤**
+
+1. 新建js文件
+entry.js
+message.js
+name.js
+
+2. 依赖关系解析
+entry.js -> message.js -> name.js
+
+3. 编写自己的webpack
+```js
+const fs = require('fs')
+function createAsset(filename) {
+    const content = fs.readFileSync(filename, 'utf-8')
+    console.log(content)
+}
+createAsset("./source/entry.js")
+```
+
+4. 分析ast，思考如何能解析出entry.js的依赖
+4.1 File -> programe
+4.2 program -> body 里面是我们各种语法的描述
+4.3 ImportDeclaration 引入的声明
+4.4 ImportDeclaration source属性，source.value就是引入文件的地址`./message`
+使用ast工具：https://astexplorer.net/
+
+```js
+import message from './message'
+{
+  "type": "File",
+  "start": 0,
+  "end": 31,
+  "loc": {
+    "start": {
+      "line": 1,
+      "column": 0
+    },
+    "end": {
+      "line": 1,
+      "column": 31
+    }
+  },
+  "errors": [],
+  "program": {
+    "type": "Program",
+    "start": 0,
+    "end": 31,
+    "loc": {
+      "start": {
+        "line": 1,
+        "column": 0
+      },
+      "end": {
+        "line": 1,
+        "column": 31
+      }
+    },
+    "sourceType": "module",
+    "interpreter": null,
+    "body": [
+      {
+        "type": "ImportDeclaration",
+        "start": 0,
+        "end": 31,
+        "loc": {
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 31
+          }
+        },
+        "specifiers": [
+          {
+            "type": "ImportDefaultSpecifier",
+            "start": 7,
+            "end": 14,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 7
+              },
+              "end": {
+                "line": 1,
+                "column": 14
+              }
+            },
+            "local": {
+              "type": "Identifier",
+              "start": 7,
+              "end": 14,
+              "loc": {
+                "start": {
+                  "line": 1,
+                  "column": 7
+                },
+                "end": {
+                  "line": 1,
+                  "column": 14
+                },
+                "identifierName": "message"
+              },
+              "name": "message"
+            }
+          }
+        ],
+        "importKind": "value",
+        "source": {
+          "type": "StringLiteral",
+          "start": 20,
+          "end": 31,
+          "loc": {
+            "start": {
+              "line": 1,
+              "column": 20
+            },
+            "end": {
+              "line": 1,
+              "column": 31
+            }
+          },
+          "extra": {
+            "rawValue": "./message",
+            "raw": "'./message'"
+          },
+          "value": "./message"
+        },
+        "assertions": []
+      }
+    ],
+    "directives": []
+  },
+  "comments": []
+}
+```
+
+5. 生成entry.js的ast，使用babylon，一个基于babel的js解析工具
+```js
+const babylon = require('babylon')
+const ast = babylon.parse(content, { //ast描述
+    sourceType: "module"
+})
+```
+
+6. 基于AST找到，entry.js里的ImportDeclaration Node，使用babel-traverse库，遍历ast
+```js
+ const traverse = require('babel-traverse').default
+ traverse(ast, {  // 对每个节点进行的操作
+        ImportDeclaration: ({node})=>{
+            console.log(node)
+        }
+    })
+}
+```
+
+7. 获取entry.js的依赖
+```js
+function createAsset(filename) {
+    const content = fs.readFileSync(filename, 'utf-8') //import message from './mywebpack.js' console.log(message)
+    const ast = babylon.parse(content, { //ast描述
+        sourceType: "module"
+    })
+    const dependences = [] //依赖数组
+    traverse(ast, {  // 对每个节点进行遍历的操作
+        ImportDeclaration: ({node})=>{
+            dependences.push(node.source.value)
+        }
+    })
+    console.log(dependences)
+}
+```
+
+8. 优化createAsset函数，使其能区分不同的文件
+8.1 获取文件的依赖，需给每个文件标注唯一的标识，可使用number自增。
+8.2 获取到entry.js的id filename以及dependencies。
+```js
+let ID = 0
+function createAsset(filename) {
+    const content = fs.readFileSync(filename, 'utf-8') //import message from './mywebpack.js' console.log(message)
+    const ast = babylon.parse(content, { //ast描述
+        sourceType: "module"
+    })
+    const dependences = [] //依赖数组
+    traverse(ast, {  // 对每个节点进行遍历的操作
+        ImportDeclaration: ({node})=>{
+            dependences.push(node.source.value)
+        }
+    })
+    const id = ID++
+    return {
+        id,
+        filename,
+        dependences
+    }
+}
+const mainAsset = createAsset("./source/entry.js")
+```
+
+9. 已经获取到单个文件的依赖，需建立依赖图
+9.1 新增createGraph，把createAsset引入createGraph
+9.2 上面存储的是相对路径，需转变为绝对路径
+
+10. 上面存储的是相对路径，需转变为绝对路径
+
+11. 需要一个map，记录depend中的相对路径和childAsset的对应关系，用于后续做依赖引入
+
+12. 遍历所有文件，生成依赖树
+```js
+function createGraph(entry){
+    const asset = createAsset(entry)
+    const allAsset = [asset] //使用数组储存 {id, filename, dependences}
+    for(let asset of allAsset){
+        asset.mapping = {}
+        const dirname = path.dirname(asset.filename) //path文件夹
+        console.log(dirname)
+        asset.dependences.forEach(reletivePath => {  //['./message.js']
+            const absolutePath = path.join(dirname, reletivePath) //获取绝对路径
+            const childAsset = createAsset(absolutePath)
+            asset.mapping[reletivePath] = childAsset.id 
+            //记录depend中的相对路径和childAsset的对应关系，用于后续做依赖引入
+            allAsset.push(childAsset) //推入数组，进行循环遍历
+        })
+    }
+    return allAsset
+}
+/* 输出：
+[
+  {
+    id: 1,
+    filename: './source/entry.js',
+    dependences: [ './message.js' ],
+    mapping: { './message.js': 2 }
+  },
+  {
+    id: 2,
+    filename: 'source/message.js',
+    dependences: [ './name.js' ],
+    mapping: { './name.js': 3 }
+  },
+  { id: 3, filename: 'source/name.js', dependences: [], mapping: {} }
+]*/
+```
+13. 新增一个bundle方法
+14. 创建整体结构代码，需要接收参数立即执行，使用立即执行函数处理，参数为module
+15. 编译源代码，使用babel-core、babel-preset-env
+```js
+const {code} = babel.transformFromAst(ast, null, {
+   presets: ['env']
+})
+return {
+    id,
+    filename,
+    dependences,
+    code
+}
+```
+16. 编译后的代码，加入result，commonjs的规范要求：
+* module变量代表当前模块，是一个对象，它的exports属性是对外的接口。加载某个模块，其实就是加载该模块的module.exports的属性。
+* require用于加载模块
+```js
+function bundle(graph){
+    let modules = ''
+    graph.forEach(module => {
+        modules += `${module.id}:[
+            function(require, module, exports){
+                ${module.code}
+            },
+            ${JSON.stringify(module.mapping)} //依赖存储
+        ],`
+    })
+
+    //实现require方法：modules[id]
+    /**
+    {
+        0: [
+            function(require, module, exports) {
+                "use strict";
+                var _message = require("./message.js");
+                var _message2 = _interopRequireDefault(_message);
+                function _interopRequireDefault(obj) {
+                    return obj && obj.__esModule ? obj : {
+                        default: obj
+                    };
+                }
+                console.log(_message2.default);
+            },
+            {
+                "./message.js": 1
+            } //依赖存储
+        ]
+    }
+     */
+    const result = `
+        (function(modules){ //立即执行函数
+            function require(id){
+                const [fn, mapping] = modules[id] 
+                function localRequire(relativePath){
+                    return require(mapping[relativePath])  //拿到id
+                }
+                const module = {exports:{}}
+                fn(localRequire, module, module.exports) //fn为function(require, module, exports)
+                return module.exports
+            }
+            require(0) //入口调用
+        })({${modules}})
+    `
+    return result
+}
+```
+

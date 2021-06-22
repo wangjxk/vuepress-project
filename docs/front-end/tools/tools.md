@@ -27,6 +27,20 @@ git push -f git@github.com:wangjxk/vuepress-project.git master
        $ git remote add origin git@github.com:xxx/yyy.git  //添加远程仓库路径（ssh路径或者http路径）
        $ git push -u origin master
        或者 $ git push -f git@github.com:xxx/yyy.git master
+       
+1、create a new repository on the command line
+echo "# my-webpack" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin git@github.com:wangjxk/my-webpack.git
+git push -u origin main
+
+2、push an existing repository from the command line
+git remote add origin git@github.com:wangjxk/my-webpack.git
+git branch -M main
+git push -u origin main
 ```
 
 ## 2、npm
