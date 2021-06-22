@@ -972,7 +972,8 @@ function bundle(graph){
                     return require(mapping[relativePath])  //拿到id
                 }
                 const module = {exports:{}}
-                fn(localRequire, module, module.exports) //fn为function(require, module, exports)
+                fn(localRequire, module, module.exports) 
+                //fn为function(require, module, exports)
                 return module.exports
             }
             require(0) //入口调用
