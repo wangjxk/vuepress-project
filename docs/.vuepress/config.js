@@ -61,6 +61,7 @@ module.exports = {
               { text: '小程序', link: '/front-end/mini-program/' },
               { text: '算法', link: '/front-end/algorithm/' },
               { text: 'hybrid开发及原理分析', link: '/front-end/hybrid/hybrid' },
+              { text: 'nginx', link: '/front-end/tools/nginx' },
             ]
           },
           { 
