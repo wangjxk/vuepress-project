@@ -15,23 +15,23 @@ module.exports = {
           {
             text: 'js',
             items: [
-              { text: 'js杂记', link: '/front-end/js/' },
-              { text: 'Promise规范和应用', link: '/front-end/js/course_04_03_promise' },   
-              { text: '浏览器对象详解', link: '/front-end/js/course_04_11_browser' },
-              { text: 'ts初探', link: '/front-end/js/course_04_12_typescript' }, 
-              { text: '面向对象编程', link: '/front-end/js/course_04_18_oop' },
-              { text: 'ES6ESNext规范详解', link: '/front-end/js/course_04_24_ES6' },
-              { text: 'this指针作用域', link: '/front-end/js/course_05_02_this_chain' }
+              { text: 'js杂记', link: '/frontend/js/' },
+              { text: 'Promise规范和应用', link: '/frontend/js/course_04_03_promise' },   
+              { text: '浏览器对象详解', link: '/frontend/js/course_04_11_browser' },
+              { text: 'ts初探', link: '/frontend/js/course_04_12_typescript' }, 
+              { text: '面向对象编程', link: '/frontend/js/course_04_18_oop' },
+              { text: 'ES6ESNext规范详解', link: '/frontend/js/course_04_24_ES6' },
+              { text: 'this指针作用域', link: '/frontend/js/course_05_02_this_chain' }
             ]
           },
           {
             text: '工程化',
             items: [
-              { text: '模块化整体规范', link: '/front-end/tools/course_04_04_module' },
-              { text: '前端工程化详解', link: '/front-end/tools/course_04_17_project' },
-              { text: 'webpack', link: '/front-end/tools/webpack' },
-              { text: '工具', link: '/front-end/tools/tools' },
-              { text: 'babel', link: '/front-end/tools/babel' }
+              { text: '模块化整体规范', link: '/frontend/tools/course_04_04_module' },
+              { text: '前端工程化详解', link: '/frontend/tools/course_04_17_project' },
+              { text: 'webpack', link: '/frontend/tools/webpack' },
+              { text: '工具', link: '/frontend/tools/tools' },
+              { text: 'babel', link: '/frontend/tools/babel' }
             ]
           },
           {
@@ -48,28 +48,26 @@ module.exports = {
           {
             text: '面试', 
             items:[
-                { text: '面试', link: '/front-end/interview/'},
-                { text: '面试1', link: '/front-end/interview/interview_02_28' },
-                { text: '面试2', link: '/front-end/interview/interview_03_14' },
-                { text: '面试3', link: '/front-end/interview/interview_03_28' }
+                { text: '面试', link: '/frontend/interview/'},
+                { text: '面试1', link: '/frontend/interview/interview_02_28' },
+                { text: '面试2', link: '/frontend/interview/interview_03_14' },
+                { text: '面试3', link: '/frontend/interview/interview_03_28' }
               ]
           },
           {
             text: '其他',
             items: [
-              { text: 'css', link: '/front-end/css/' },
-              { text: '小程序', link: '/front-end/mini-program/' },
-              { text: '算法', link: '/front-end/algorithm/' },
-              { text: 'hybrid开发及原理分析', link: '/front-end/hybrid/hybrid' },
-              { text: 'nginx', link: '/front-end/tools/nginx' },
+              { text: 'css', link: '/frontend/css/' },
+              { text: '小程序', link: '/frontend/mini-program/' },
+              { text: '算法', link: '/frontend/algorithm/' },
+              { text: 'hybrid开发及原理分析', link: '/frontend/hybrid/hybrid' }
             ]
           },
           { 
             text: '后端', 
             items: [
-                { text: 'http', link: '/back-end/http/' },
-                { text: 'java', link: '/back-end/java/' },
-                { text: 'springboot', link: '/back-end/springboot/'}
+                { text: 'nginx', link: '/backend/nginx' },
+                { text: 'springboot', link: '/backend/springboot'}
             ] 
           }
         ],
