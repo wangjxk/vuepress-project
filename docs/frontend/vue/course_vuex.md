@@ -263,6 +263,11 @@ export default {
             ...mapActions({
                 call: 'moduleA/callAction'
             }),
+            /* 另外写法 */
+            ...mapActions('moduleA', {
+                call: 'callAction'
+            }),
+            ...mapActions('moduleA', ['callAction']),
             modifyNameAction() {
                 this.call();
             }

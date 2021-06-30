@@ -213,5 +213,105 @@ node的server的架构工程说明
 * 部署deploy：机器申请（dev/prod）、数据库申请（dev/prod）、网关域名DNS映射、编译构建打包(compile.sh编译、run.sh执行、check.sh心跳检测、manifest.yml构建文件(target: os、version、maven，runscript))
 * 部署平台：deploy server/client，配置文件放置，通过点击操作即可实现部署配置
 
-#### 
+## 4、工程化技巧
+
+### 1、require.context
+
+webpack的api实现代码自动导入，实现工程自动化导入，实现route、store等解耦
+
+require.context在webpack解析打包时自动执行。
+
+```js
+//入参解析
+require.context(
+  directory,    							 //读取文件的路径
+  (useSubdirectories = true),  //是否遍历文件的子目录
+  (regExp = /^\.\/.*$/),       //要匹配文件的正则 
+  (mode = 'sync')
+);
+
+//输出解析
+/* 
+1、输出为函数 webpackContext(req)
+1.1、webpackContext函数，入参为路径，出参为模块，可取出defalut模块
+1.2、函数也是对象，可有属性
+2、输出的函数有三个属性，keys、id、resolve
+2.1、resolve{Function} -接受一个参数request,request为test文件夹下面匹配文件的相对路径,返回这个匹配文件相对于整个工程的相对路径
+2.2、keys {Function} -返回匹配成功模块的名字组成的数组
+2.3、id {String} -执行环境的id,返回的是一个字符串,主要用在module.hot.accept
+*/
+
+//示例：index.js  ./modules/home.js
+const modulesFiles = require.context('./modules', true, /\.js$/)
+
+console.log(modulesFiles)
+/*
+ƒ webpackContext(req) {
+	var id = webpackContextResolve(req);
+	return __webpack_require__(id);
+}
+*/
+
+console.dir(modulesFiles)
+/*
+ƒ webpackContext(req)
+id: "./src/store/modules sync recursive \\.js$"
+keys: ƒ webpackContextKeys()
+resolve: ƒ webpackContextResolve(req)
+*/
+
+console.log(modulesFiles.keys())
+//["./home.js"]
+
+console.log(modulesFiles.id)
+//./src/store/modules sync recursive \.js$
+
+console.log(modulesFiles.resolve('./home.js'))
+//./src/store/modules/home.js
+
+console.log(modulesFiles('./home.js'))
+/*
+Module
+default: {namespaced: true, state: {…}, getters: {…}, mutations: {…}}
+*/
+```
+
+* store解耦合
+
+```js
+import Vue from "vue";
+import Vuex from "vuex";
+import actions from "./actions.js"
+import state from "./state.js"
+import mutations from "./mutations.js"
+
+Vue.use(Vuex);
+
+let store = {
+  state,
+  actions,
+  mutations
+}
+const modulesFiles = require.context('./modules', true, /\.js$/
+const modules = modulesFiles.keys().reduce((modules, modulePath)=>{
+  		//['./home.js']  ./home.js -> home
+      const moduleName = modulePath.replace(/^\.\/(.*)\.js$/, '$1')
+      const module = modulesFiles(modulePath).default
+      modules[moduleName] = module
+      return modules
+}, {})
+store = {...store, modules}
+export default new Vuex.Store(store);
+
+/*
+array.reduce(function(total, currentValue, currentIndex, arr), initialValue)
+1、total 必需，初始值, 或者计算结束后的返回值
+2、currentValue	必需，当前元素
+3、currentIndex	可选，当前元素的索引
+4、arr	可选，当前元素所属的数组对象
+5、initialValue 可选，传递给函数的初始值
+*/
+```
+
+
 
