@@ -6,7 +6,7 @@
 
 [深入浅出webpack](https://xbhub.gitee.io/wiki/webpack/)
 
-[阮一峰webpack-demo](https://github.com/ruanyf/webpack-demos)
+[webpack简介](https://www.kancloud.cn/sllyli/webpack/1242347)
 
 ## 2、总体简介
 

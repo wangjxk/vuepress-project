@@ -215,9 +215,13 @@ node的server的架构工程说明
 
 ## 4、工程化技巧
 
-### 1、require.context
+### 1、模块解耦
 
-webpack的api实现代码自动导入，实现工程自动化导入，实现route、store等解耦
+将全局的store、router、mock、i18n剥离在各组件中，实现解耦。
+
+#### 1、require.context
+
+使用webpack的api实现代码自动导入，初始化时自动解析导入，实现route、store等解耦拆分
 
 require.context在webpack解析打包时自动执行。
 
@@ -313,5 +317,146 @@ array.reduce(function(total, currentValue, currentIndex, arr), initialValue)
 */
 ```
 
+#### 2、使用register方法
 
+重写vue类，子组件使用重写类，重写beforeCreate和destoryed方法，store、i18n、router通过参数传入后在beforeCreate注入，在destoryed中销毁，实现模块的解耦。
+
+```js
+//方法调用
+
+```
+
+### 2、mock方案
+
+参考资料1：[vue中mock使用](https://www.cnblogs.com/l-y-h/archive/2019/10/17/11691110.html)
+
+参考资料2：[axios和mock封装使用](https://www.cnblogs.com/l-y-h/p/12955001.html#_label2)
+
+#### 1、mock.js
+
+开发环境使用mock.js库，对请求进行拦截，无实际请求内容。
+
+```js
+Mock.mock( rurl?, rtype?, template ) )
+Mock.mock( rurl, rtype, function( options ) )
+
+/* 参数解析
+1、rurl 可选
+表示要拦截的url，可以使字符串，也可以是正则
+
+2、rtype 可选
+表示要拦截的ajax请求方式，如get、post
+
+3、template 可选
+数据模板，可以是对象也可以是字符串
+
+4、function(option) 可选
+表示用于生成响应数据的函数
+*/
+```
+
+```js
+//main.js
+if(process.env.NODE_ENV === 'development'){
+  require("../mock/mock.js")
+}
+
+//mock.js
+import Mock from "mockjs"
+
+const mocks = require.context("@/views", true, /.+\/mock\/.*\.js/);
+mocks.keys().map((mockPath)=>{
+    const mock = mocks(mockPath).default
+    Mock.mock(mock.url, mock.method, mock.result);
+})
+
+// @/views/../mock/index.js
+const listData = [
+    {
+        date: "2016-05-02",
+        name: "王小虎",
+        address: "上海市普陀区金沙江路 1518 弄",
+    },
+    {
+        date: "2016-05-04",
+        name: "王小虎",
+        address: "上海市普陀区金沙江路 1517 弄",
+    },
+    {
+        date: "2016-05-01",
+        name: "王小虎",
+        address: "上海市普陀区金沙江路 1519 弄",
+    },
+    {
+        date: "2016-05-03",
+        name: "王小虎",
+        address: "上海市普陀区金沙江路 1516 弄号",
+    },
+]
+
+export default {
+    url: '/user/info',
+    method: 'get',
+    result: () => ({
+        code: 0,
+        info: listData
+    })
+}
+```
+
+#### 2、后端mock
+
+* 可对接第三方mock服务
+* 使用devserver的before进行数据mock：`before` 和 `after` 配置用于在 webpack-dev-server 定义额外的中间件
+  * `before` 在 webpack-dev-server 静态资源中间件处理之前，可以用于拦截部分请求返回特定内容，或者实现简单的数据 mock
+  * `after` 在 webpack-dev-server 静态资源中间件处理之后，比较少用到，可以用于打印日志或者做一些额外处理
+  * before和after参数：`function (app, server, compiler)`
+
+思路：
+
+1. webpack-dev-server本质是一个express服务器，使用原生before勾子注册路径实现数据mock，使用chokidar进行数据检测实现热更新加载。
+2. before勾子中使用webpack-api-mocker中间件实现数据mock和热更新。
+
+```js
+/*
+apiMocker(app, mockerFilePath[, options])
+apiMocker(app, Mocker[, options])
+*/
+
+//vue.config.js
+before: (app) => {
+  apiMocker(app, path.resolve('./mock/mock-server.js'))
+}
+
+//mock-server.js
+module.exports = {
+		'GET /api/login': {
+        success: appData.login.success,
+        message: appData.login.message
+    },
+    'GET /api/list': [{
+            id: 1,
+            username: 'kenny',
+            sex: 6
+        },
+        {
+            id: 2,
+            username: 'kenny',
+            sex: 6
+        }
+    ],
+    'POST /api/post': (req, res) => {
+        res.send({
+            status: 'error',
+            code: 403
+        });
+    },
+    'DELETE /api/remove': (req, res) => {
+        res.send({
+            status: 'ok',
+            message: '删除成功！'
+        });
+    }
+}
+```
 
