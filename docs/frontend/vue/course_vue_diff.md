@@ -2,13 +2,13 @@
 
 > 参考资料
 >
->  * 浏览器工作原理揭秘：https://www.html5rocks.com/zh/tutorials/internals/howbrowserswork/
->  * 像素的一生：https://www.bilibili.com/video/av35265997/
->  * Levenshtein：https://en.wikipedia.org/wiki/Levenshtein_distance
->  * inferno: https://github.com/infernojs/inferno
->  * 启发式算法：https://www.zhihu.com/topic/19864220/hot
->  * 最长上升子序列算法：https://en.wikipedia.org/wiki/Longest_increasing_subsequence
->  * diff算法O(n^3)：https://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf
+>  * [浏览器工作原理揭秘](https://www.html5rocks.com/zh/tutorials/internals/howbrowserswork/)
+>  * [像素的一生](https://www.bilibili.com/video/av35265997/)
+>  * [Levenshtein](https://en.wikipedia.org/wiki/Levenshtein_distance)
+>  * [inferno]( https://github.com/infernojs/inferno)
+>  * [启发式算法](https://www.zhihu.com/topic/19864220/hot)
+>  * [最长上升子序列算法](https://en.wikipedia.org/wiki/Longest_increasing_subsequence)
+>  * [diff算法O(n^3)](https://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf)
 
 ## 1、diff算法简介
 
