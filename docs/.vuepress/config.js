@@ -42,7 +42,8 @@ module.exports = {
               { text: 'vue-router', link: '/frontend/vue/course_05_09_vue-router' },
               { text: 'vuex', link: '/frontend/vue/course_vuex' },
               { text: 'vue-ssr', link: '/frontend/vue/course_vue_ssr' },
-              { text: 'vue原理', link: '/frontend/vue/course_vue_interview_06_06' }
+              { text: 'vue响应式原理', link: '/frontend/vue/course_vue_interview_06_06' },
+              { text: 'vue的diff原理', link: '/frontend/vue/course_vue_diff' },
             ]
           },
           {
