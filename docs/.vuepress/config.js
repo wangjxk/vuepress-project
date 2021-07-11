@@ -9,10 +9,6 @@ module.exports = {
         logo: '/img/jian.jpeg',
         nav: [
           {
-            text: 'github',
-            link: 'https://github.com/wangjxk'
-          },
-          {
             text: 'js',
             items: [
               { text: 'js杂记', link: '/frontend/js/' },
@@ -42,8 +38,15 @@ module.exports = {
               { text: 'vue-router', link: '/frontend/vue/course_05_09_vue-router' },
               { text: 'vuex', link: '/frontend/vue/course_vuex' },
               { text: 'vue-ssr', link: '/frontend/vue/course_vue_ssr' },
+              { text: 'vue-i18n', link: '/frontend/vue/vue-i18n' },
               { text: 'vue响应式原理', link: '/frontend/vue/course_vue_interview_06_06' },
               { text: 'vue的diff原理', link: '/frontend/vue/course_vue_diff' },
+            ]
+          },
+          {
+            text: 'react',
+            items: [
+              { text: 'react框架基础', link: '/frontend/react/react' }, 
             ]
           },
           {
@@ -60,8 +63,16 @@ module.exports = {
             items: [
               { text: 'css', link: '/frontend/css/' },
               { text: '小程序', link: '/frontend/mini-program/' },
-              { text: '算法', link: '/frontend/algorithm/' },
               { text: 'hybrid开发及原理分析', link: '/frontend/hybrid/hybrid' }
+            ]
+          },
+          {
+            text: '算法',
+            items: [
+              { text: '图的存储和遍历', link: '/frontend/algorithm/' },
+              { text: '双指针', link: '/frontend/algorithm/' },
+              { text: '最短编辑距离', link: '/frontend/algorithm/' },
+              { text: '最长上升子序列', link: '/frontend/algorithm/' },
             ]
           },
           { 
